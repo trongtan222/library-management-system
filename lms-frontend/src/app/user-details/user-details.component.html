@@ -2,21 +2,26 @@
 <table class="table table-info table-striped">
     <thead>
         <tr>
-            <th> Book ID </th>
+            <th> Book Name </th>
             <th> Issue Date </th>
             <th> Return Date </th>
+            <th> Status </th>
         </tr>
     </thead>
     <tbody>
         <tr *ngFor="let borrower of borrow">
-            <td> {{ borrower.bookId }} </td>
-            <td> {{ borrower.issueDate }} </td>
-            <div *ngIf="borrower.returnDate != null">
-                <td> {{ borrower.returnDate }} </td>
-            </div>
-            <div *ngIf="borrower.returnDate === null">
-                <td> Book not returned yet </td>
-            </div>
+            <td> {{ borrower.bookName }} </td>
+            <td> {{ borrower.loanDate | date:'dd/MM/yyyy' }} </td>
+            <td> 
+                {{ borrower.returnDate ? (borrower.returnDate | date:'dd/MM/yyyy') : 'Book not returned yet' }} 
+            </td>
+            <td>
+                <span class="badge" [ngClass]="{
+                    'bg-success': borrower.status === 'ACTIVE',
+                    'bg-danger': borrower.status === 'OVERDUE',
+                    'bg-secondary': borrower.status === 'RETURNED'
+                }">{{ borrower.status }}</span>
+            </td>
         </tr>
     </tbody>
 </table>

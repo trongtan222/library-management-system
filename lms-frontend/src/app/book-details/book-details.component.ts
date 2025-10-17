@@ -1,11 +1,12 @@
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
-import { Books } from '../_model/books';
-import { Borrow } from '../_model/borrow';
-import { Users } from '../_model/users';
-import { BooksService } from '../_service/books.service';
-import { BorrowService } from '../_service/borrow.service';
-import { UsersService } from '../_service/users.service';
+import { ActivatedRoute, Router } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
+import { Books } from '../models/books';
+import { BooksService } from '../services/books.service';
+import { UserAuthService } from '../services/user-auth.service';
+import { finalize } from 'rxjs/operators';
+import { ReviewService, BookReviewsSummary, Review } from '../services/review.service';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-book-details',
@@ -14,42 +15,157 @@ import { UsersService } from '../_service/users.service';
 })
 export class BookDetailsComponent implements OnInit {
 
-  id: number;
-  book: Books;
-  borrow: Borrow[];
-  user: Users;
+  book: Books | null = null;
+  isLoading = true;
+  errorMessage = '';
+  isUser = false;
+  private readonly googleApiKey = 'AIzaSyB2Yrs1oWkbIirD3BmF2lOM7bIE9d3Zn40';
+  reviewsSummary: BookReviewsSummary | null = null;
+  userCanReview = false;
+  isCheckingPermission = true; // Biến trạng thái mới để quản lý việc kiểm tra quyền
+  newReview = { rating: 5, comment: '' };
 
-  constructor(private route: ActivatedRoute,
-    private bookService: BooksService,
-    private borrowService: BorrowService,
-    public userService: UsersService
-  ) { }
+  constructor(
+    private route: ActivatedRoute,
+    private booksService: BooksService,
+    private userAuthService: UserAuthService,
+    private router: Router,
+    private http: HttpClient,
+    private reviewService: ReviewService,
+    private toastr: ToastrService
+  ) {}
 
   ngOnInit(): void {
-    this.id = this.route.snapshot.params['bookId'];
-    // console.log(this.id);
-    this.book = new Books();
-    this.bookService.getBookById(this.id).subscribe( data => {
-      this.book = data;
-      console.log(data);
-    })
-
-    this.getBorrowHistory(this.id);
+    this.isUser = this.userAuthService.isUser();
     
+    const bookIdParam = this.route.snapshot.paramMap.get('id') || this.route.snapshot.paramMap.get('bookId');
+    const bookId = Number(bookIdParam);
+
+    if (bookId) {
+      this.loadBookDetails(bookId);
+      this.loadReviewsAndCheckPermission(bookId);
+    } else {
+      this.errorMessage = "Không tìm thấy ID sách trong URL.";
+      this.isLoading = false;
+    }
   }
 
-  private getBorrowHistory(bookId: number) {
-    this.borrowService.getBookBorrowHistory(bookId).subscribe(data => {
-      this.borrow = data;
-      console.log(data);
+  private loadBookDetails(id: number): void {
+    this.isLoading = true;
+    this.booksService.getBookById(id)
+      .pipe(finalize(() => this.isLoading = false))
+      .subscribe({
+        next: (data: any) => {
+          this.book = {
+            id: data.id,
+            name: data.name,
+            author: data.author,
+            genre: data.genre,
+            publishedYear: data.publishedYear,
+            isbn: data.isbn,
+            numberOfCopiesAvailable: data.numberOfCopiesAvailable,
+            coverUrl: data.coverUrl
+          };
+          if (this.book && !this.book.coverUrl) {
+            this.findAndSaveCover(this.book);
+          }
+        },
+        error: (err) => { this.errorMessage = 'Không thể tải chi tiết sách.'; console.error(err); }
+      });
+  }
+
+  loadReviewsAndCheckPermission(bookId: number): void {
+    // 1. Tải các đánh giá công khai và điểm trung bình
+    this.reviewService.getReviewsForBook(bookId).subscribe(summary => {
+      this.reviewsSummary = summary;
+    });
+
+    // 2. Nếu là user, gọi API mới để kiểm tra quyền đánh giá
+    if (this.isUser) {
+      this.isCheckingPermission = true; // Bắt đầu kiểm tra
+      this.reviewService.checkIfUserHasReviewed(bookId).subscribe({
+        next: response => {
+          this.userCanReview = !response.hasReviewed;
+          this.isCheckingPermission = false; // Hoàn tất kiểm tra
+        },
+        error: () => {
+          this.isCheckingPermission = false; // Hoàn tất ngay cả khi có lỗi
+          this.userCanReview = false; // Mặc định không cho review nếu có lỗi
+        }
+      });
+    } else {
+      this.isCheckingPermission = false; // Không phải user, không cần kiểm tra
+    }
+  }
+  
+  submitReview(): void {
+    const bookId = this.book?.id;
+    if (!bookId || this.newReview.rating < 1) {
+        this.toastr.error('Vui lòng chọn ít nhất 1 sao.');
+        return;
+    }
+
+    this.reviewService.addReview(bookId, this.newReview).subscribe({
+        next: () => {
+            this.toastr.success('Cảm ơn bạn đã gửi đánh giá! Đánh giá của bạn sẽ được hiển thị sau khi quản trị viên phê duyệt.');
+            this.userCanReview = false; // Ẩn form sau khi gửi
+        },
+        error: (err) => this.toastr.error(err.error?.message || 'Gửi đánh giá thất bại.')
     });
   }
 
-  public getUserData(userId: number):string {
-    this.user = new Users();
-    this.userService.getUserById(userId).subscribe( data => {
-      this.user = data;
-    })
-    return this.user.name;
+  private findAndSaveCover(book: Books): void {
+    const isbn = book.isbn?.trim();
+    if (isbn) {
+      const url = `https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}&key=${this.googleApiKey}`;
+      this.http.get<any>(url).subscribe({
+        next: (response) => {
+          const coverUrl = response?.items?.[0]?.volumeInfo?.imageLinks?.thumbnail;
+          if (coverUrl) {
+            this.setAndSaveCover(book, coverUrl);
+          } else {
+            console.warn(`Không tìm thấy bìa sách với ISBN ${isbn}. Thử tìm bằng tên và tác giả.`);
+            this.searchByTitleAndAuthor(book);
+          }
+        },
+        error: () => this.searchByTitleAndAuthor(book)
+      });
+    } else {
+      this.searchByTitleAndAuthor(book);
+    }
+  }
+
+  private searchByTitleAndAuthor(book: Books): void {
+    const title = encodeURIComponent(book.name);
+    const author = encodeURIComponent(book.author);
+    const url = `https://www.googleapis.com/books/v1/volumes?q=intitle:${title}+inauthor:${author}&key=${this.googleApiKey}`;
+    
+    this.http.get<any>(url).subscribe({
+      next: (response) => {
+        const coverUrl = response?.items?.[0]?.volumeInfo?.imageLinks?.thumbnail;
+        if (coverUrl) {
+          this.setAndSaveCover(book, coverUrl);
+        } else {
+          console.warn(`Không tìm thấy bìa sách cho "${book.name}".`);
+        }
+      },
+      error: (err) => console.error('Lỗi khi tìm kiếm bằng tên/tác giả:', err)
+    });
+  }
+
+  private setAndSaveCover(book: Books, coverUrl: string): void {
+    if (this.book) {
+      this.book.coverUrl = coverUrl;
+      if (this.userAuthService.isAdmin()) {
+        this.booksService.updateBook(book.id, { coverUrl: coverUrl }).subscribe({
+          next: () => console.log('Đã lưu URL bìa sách vào backend.'),
+          error: (saveErr) => console.error('Lỗi khi lưu URL bìa sách:', saveErr)
+        });
+      }
+    }
+  }
+
+  navigateToBorrow(): void {
+    this.router.navigate(['/borrow-book']);
   }
 }

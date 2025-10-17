@@ -1,0 +1,28 @@
+<div class="container-fluid mt-4">
+  <h1 class="mb-4">Manage Unpaid Fines</h1>
+  <div *ngIf="isLoading" class="text-center">Loading...</div>
+  <table *ngIf="!isLoading" class="table table-hover">
+    <thead>
+      <tr>
+        <th>Loan ID</th>
+        <th>User</th>
+        <th>Book</th>
+        <th>Overdue Days</th>
+        <th>Fine Amount</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let fine of fines">
+        <td>{{ fine.loanId }}</td>
+        <td>{{ fine.userName }}</td>
+        <td>{{ fine.bookName }}</td>
+        <td>{{ fine.overdueDays }}</td>
+        <td>{{ fine.fineAmount | currency:'VND' }}</td>
+        <td>
+          <button class="btn btn-success btn-sm" (click)="markAsPaid(fine.loanId)">Mark as Paid</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>

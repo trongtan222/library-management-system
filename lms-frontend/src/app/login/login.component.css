@@ -1,0 +1,46 @@
+/* Căn giữa trang login, phủ background nhẹ */
+.auth{
+  min-height: calc(100vh - 64px); /* chừa header nếu có */
+  display: grid; place-items: center;
+  padding: 48px 16px; position: relative;
+}
+.auth-bg::before, .auth-bg::after{
+  content:""; position:absolute; inset:0; pointer-events:none;
+}
+.auth-bg::before{
+  background:
+    radial-gradient(420px 180px at 20% 10%, rgba(167,139,250,.18), transparent 70%),
+    radial-gradient(560px 240px at 85% -10%, rgba(99,102,241,.18), transparent 72%);
+}
+.auth-bg::after{
+  background-image:
+    linear-gradient(transparent 97%, rgba(255,255,255,.07) 97%),
+    linear-gradient(90deg, transparent 97%, rgba(255,255,255,.07) 97%);
+  background-size:24px 24px; opacity:.2;
+  -webkit-mask-image: radial-gradient(60% 60% at 50% 35%, #000 55%, transparent 80%);
+  mask-image: radial-gradient(60% 60% at 50% 35%, #000 55%, transparent 80%);
+}
+
+/* Thẻ form */
+.auth-card{
+  width: 100%; max-width: 520px;
+  padding: 28px;
+  border-radius: var(--radius-lg, 18px);
+}
+
+/* Typography */
+.auth-card h1{ margin: 0 0 6px; text-align: center; font-size: 28px; }
+.subtitle{ margin: 0 0 16px; text-align:center; color: var(--muted); }
+
+/* Field */
+.field{ margin: 14px 0; }
+.field label{ display:block; margin-bottom:8px; color: var(--muted); font-weight:600; }
+.field input{ width:100%; } /* đã có style input global, chỉ đảm bảo full width */
+.hint{ display:block; margin-top:6px; color: var(--muted); font-size:12px; opacity:.85; }
+
+/* Actions */
+.actions{ display:flex; justify-content:space-between; align-items:center; margin: 6px 0 14px; }
+.remember{ display:flex; align-items:center; gap:8px; color: var(--muted); }
+
+/* Nút submit full width */
+.btn-block{ width:100%; padding:14px 18px; border-radius: 14px; }

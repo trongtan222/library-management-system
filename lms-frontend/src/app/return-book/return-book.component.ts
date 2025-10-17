@@ -1,54 +1,96 @@
 import { Component, OnInit } from '@angular/core';
-import { Observable } from 'rxjs';
-import { Books } from '../_model/books';
-import { Borrow } from '../_model/borrow';
-import { BooksService } from '../_service/books.service';
-import { BorrowService } from '../_service/borrow.service';
-import { UserAuthService } from '../_service/user-auth.service';
+import { Router } from '@angular/router';
+import { HttpErrorResponse } from '@angular/common/http';
+import { BorrowService } from '../services/borrow.service';
+import { UserAuthService } from '../services/user-auth.service';
+import { LoanDetails } from '../services/admin.service';
 
 @Component({
   selector: 'app-return-book',
   templateUrl: './return-book.component.html',
-  styleUrls: ['./return-book.component.css']
+  styleUrls: ['./return-book.component.css'],
 })
 export class ReturnBookComponent implements OnInit {
 
-  books: Books[];
-  borrow: Borrow[];
+  borrows: LoanDetails[] = [];
+  userId: number | null = null;
+  loading = new Set<number>();
+
+  showConfirmModal = false;
+  borrowToReturn: LoanDetails | null = null;
+
+  errorMessage = '';
+  successMessage = '';
 
   constructor(
     private borrowService: BorrowService,
-    private booksService: BooksService,
-    private userAuthService: UserAuthService
-  ) { }
-
-  userId = this.userAuthService.getUserId();
+    private userAuthService: UserAuthService,
+    private router: Router
+  ) {}
 
   ngOnInit(): void {
-    this.getBooks();
-    this.getBooksByUser();
+    this.userId = this.userAuthService.getUserId();
+
+    if (!this.userId) {
+      this.router.navigate(['/login'], { queryParams: { returnUrl: '/return-book' }});
+      return;
+    }
+    this.loadUserBorrows();
   }
 
-  private getBooks() {
-    this.booksService.getBooksList().subscribe(data =>{
-      this.books = data;
+  private loadUserBorrows() {
+    this.borrowService.getMyLoanHistory().subscribe({
+      next: (data: LoanDetails[]) => {
+        this.borrows = (data || []).filter(b => b.status !== 'RETURNED');
+      },
+      error: (err: HttpErrorResponse) => {
+        console.error('[ReturnBook] getMyLoanHistory error:', err);
+        this.errorMessage = "Could not retrieve your borrowed books list.";
+      },
     });
   }
 
-  
-  private getBooksByUser() {
-    this.borrowService.getBooksBorrowedByUser(this.userId).subscribe(data => {
-      this.borrow = data;
-    })
+  openConfirmModal(borrow: LoanDetails): void {
+    this.borrowToReturn = borrow;
+    this.showConfirmModal = true;
   }
 
-  brw: Borrow = new Borrow();
-  public returnBook(borrowId: number) {
-    this.brw.borrowId = borrowId;
-    this.borrowService.returnBook(this.brw).subscribe(data => {
-      console.log(data);
-    },
-    error => console.log(error));
+  closeConfirmModal(): void {
+    this.showConfirmModal = false;
+    this.borrowToReturn = null;
   }
 
+  confirmReturn(): void {
+    if (!this.borrowToReturn || !this.borrowToReturn.loanId) {
+      console.error("Return failed: loanId is missing.", this.borrowToReturn);
+      return;
+    }
+
+    const borrow = this.borrowToReturn;
+    this.closeConfirmModal();
+    this.clearMessages();
+    this.loading.add(borrow.loanId);
+    
+    const loanId = borrow.loanId;
+
+    this.borrowService.returnLoan(loanId).subscribe({
+      next: () => {
+        this.successMessage = `Successfully returned "${borrow.bookName}".`;
+        if (this.userId) {
+          this.loadUserBorrows();
+        }
+      },
+      error: (err: HttpErrorResponse) => {
+        this.errorMessage = err.error?.message || 'An error occurred while returning the book.';
+      },
+      complete: () => {
+        if (borrow.loanId) this.loading.delete(borrow.loanId);
+      }
+    });
+  }
+
+  private clearMessages(): void {
+    this.errorMessage = '';
+    this.successMessage = '';
+  }
 }

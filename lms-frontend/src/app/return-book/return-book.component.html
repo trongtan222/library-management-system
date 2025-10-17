@@ -1,25 +1,60 @@
-<h2>List of books to be returned</h2>
-<table class="table table-success table-striped">
+<div class="container mt-4">
+  <h2>Your Borrowed Books</h2>
+
+  <!-- Vùng hiển thị thông báo -->
+  <div *ngIf="successMessage" class="alert alert-success mt-3" role="alert">
+    {{ successMessage }}
+  </div>
+  <div *ngIf="errorMessage" class="alert alert-danger mt-3" role="alert">
+    {{ errorMessage }}
+  </div>
+
+  <div *ngIf="borrows.length === 0 && !errorMessage" class="alert alert-info mt-3">
+    You have no books currently borrowed.
+  </div>
+
+  <table *ngIf="borrows.length > 0" class="table table-success table-striped mt-3">
     <thead>
-        <tr>
-            <th> Book ID </th>
-            <th> Issue Date </th>
-            <th> Return Date </th>
-            <th> Overdue Date </th>
-            <th> Action </th>
-        </tr>
+      <tr>
+        <th>Book Name</th>
+        <th>Borrow Date</th>
+        <th>Due Date</th>
+        <th>Actions</th>
+      </tr>
     </thead>
     <tbody>
-        <tr *ngFor="let b of borrow">
-            <td> {{ b.bookId }} </td>
-            <td> {{ b.issueDate }} </td>
-            <td> {{ b.returnDate }} </td>
-            <td> {{ b.dueDate }} </td>
-            <td>
-                <div *ngIf="b.returnDate === null">
-                    <button (click) = "returnBook(b.borrowId)" class="btn btn-success"> Return </button>
-                </div>
-            </td>
-        </tr>
+      <tr *ngFor="let b of borrows">
+        <td>{{ b.bookName }}</td>
+        <td>{{ b.loanDate | date: 'dd/MM/yyyy' }}</td>
+        <td>{{ b.dueDate | date: 'dd/MM/yyyy' }}</td>
+        <td>
+          <button (click)="openConfirmModal(b)" class="btn btn-danger" [disabled]="loading.has(b.loanId!)">
+            <span *ngIf="loading.has(b.loanId!)" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            <span *ngIf="!loading.has(b.loanId!)">Return</span>
+          </button>
+        </td>
+      </tr>
     </tbody>
-</table>
+  </table>
+</div>
+
+<!-- Modal xác nhận trả sách -->
+<div class="modal fade show" tabindex="-1" role="dialog" [ngStyle]="{display: showConfirmModal ? 'block' : 'none'}" *ngIf="showConfirmModal">
+  <div class="modal-dialog">
+    <div class="modal-content" style="background:#1a2035;color:#f3f4f6;border:1px solid rgba(255,255,255,.14)">
+      <div class="modal-header">
+        <h5 class="modal-title">Confirm Return</h5>
+        <button type="button" class="btn-close btn-close-white" (click)="closeConfirmModal()"></button>
+      </div>
+      <div class="modal-body">
+        <p *ngIf="borrowToReturn">Are you sure you want to return the book "<strong>{{ borrowToReturn.bookName }}</strong>"?</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline-secondary" (click)="closeConfirmModal()">No, cancel</button>
+        <button class="btn btn-danger" (click)="confirmReturn()">Yes, return</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Backdrop cho modal -->
+<div class="modal-backdrop fade show" *ngIf="showConfirmModal"></div>

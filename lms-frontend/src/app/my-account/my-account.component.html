@@ -1,0 +1,78 @@
+<div class="container mt-4">
+    <div class="header">
+        <h1>My Account</h1>
+        <p class="lead">Welcome back, {{ userName }}!</p>
+    </div>
+
+    <div *ngIf="isLoading" class="text-center my-5">
+        <div class="spinner-border" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+
+    <div *ngIf="errorMessage" class="alert alert-danger">{{ errorMessage }}</div>
+    <div *ngIf="successMessage" class="alert alert-success">{{ successMessage }}</div>
+
+    <div *ngIf="!isLoading && !errorMessage">
+        
+        <div *ngIf="myFines && myFines.length > 0" class="card border-warning mb-4">
+            <h5 class="card-header bg-warning text-dark">
+                <i class="fas fa-exclamation-triangle me-2"></i>Outstanding Fines
+            </h5>
+            <div class="card-body">
+                <p>You have unpaid fines. Please contact the librarian to resolve them.</p>
+                <ul class="list-group">
+                    <li *ngFor="let fine of myFines" class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            For the book <em>"{{ fine.bookName }}"</em>
+                            <small class="d-block text-muted">Overdue by {{ fine.overdueDays }} days</small>
+                        </div>
+                        <span class="badge bg-danger rounded-pill fs-6">{{ fine.fineAmount | currency:'VND':'symbol':'1.0-0' }}</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <h3 class="mt-4 mb-3">Your Loan History</h3>
+        <div *ngIf="loans.length === 0" class="alert alert-info">
+            You have not borrowed any books yet.
+        </div>
+
+        <div class="table-responsive" *ngIf="loans.length > 0">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Book Title</th>
+                        <th>Loan Date</th>
+                        <th>Due Date</th>
+                        <th>Return Date</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let loan of loans">
+                        <td>{{ loan.bookName }}</td>
+                        <td>{{ loan.loanDate | date:'dd/MM/yyyy' }}</td>
+                        <td>{{ loan.dueDate | date:'dd/MM/yyyy' }}</td>
+                        <td>{{ loan.returnDate ? (loan.returnDate | date:'dd/MM/yyyy') : '-' }}</td>
+                        <td>
+                            <span class="badge" [ngClass]="{
+                                'bg-success': loan.status === 'ACTIVE',
+                                'bg-danger': loan.status === 'OVERDUE',
+                                'bg-secondary': loan.status === 'RETURNED'
+                            }">{{ loan.status }}</span>
+                        </td>
+                        <td>
+                            <button *ngIf="loan.status === 'ACTIVE' || loan.status === 'OVERDUE'"
+                                class="btn btn-sm btn-outline-primary"
+                                (click)="renewLoan(loan.loanId)">
+                                Renew (7 days)
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

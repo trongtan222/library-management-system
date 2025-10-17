@@ -1,29 +1,54 @@
-<h2>User List</h2>
+<h2 class="d-flex justify-content-between align-items-center">
+  User List
+  <a routerLink="/create-user" class="btn btn-primary">Create New User</a>
+</h2>
 <table class="table table-success table-striped">
     <thead>
         <tr>
-            <th> User ID </th>
-            <th> Name </th>
-            <th> Username </th>
-            <th> Role </th>
-            <th> View History </th>
-            <th> Edit User </th>
+            <th>User ID</th>
+            <th>Name</th>
+            <th>Username</th>
+            <th>Roles</th>
+            <th>Actions</th>
         </tr>
     </thead>
     <tbody>
         <tr *ngFor="let user of users">
-            <td> {{ user.userId }} </td>
-            <td> {{ user.name }} </td>
-            <td> {{ user.username }} </td>
-            <td> {{ user.role[0].roleName }} </td>
-            <td>        
-                <div *ngIf="user.role[0].roleName === 'User'">
-                    <button (click) = "userDetails(user.userId)" class="btn btn-success"> View </button>
-                </div>
-            </td>
+            <td>{{ user.userId }}</td>
+            <td>{{ user.name }}</td>
+            <td>{{ user.username }}</td>
+            <td>{{ user.roles.join(', ') }}</td>
             <td>
-                <button (click) = "updateUser(user.userId)" class="btn btn-info"> Edit </button> 
+                <button (click)="updateUser(user.userId)" class="btn btn-info btn-sm">Edit</button>
+                <button (click)="openConfirmModal(user, 'reset')" class="btn btn-warning btn-sm mx-2">Reset Password</button>
+                <button (click)="openConfirmModal(user, 'delete')" class="btn btn-danger btn-sm">Delete</button>
             </td>
         </tr>
     </tbody>
 </table>
+
+<div class="modal fade show" [ngStyle]="{display: userToAction ? 'block' : 'none'}" *ngIf="userToAction">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="background:#0f1426; color:#f1f3ff;">
+      <div class="modal-header">
+        <h5 class="modal-title">{{ actionType === 'delete' ? 'Confirm Deletion' : 'Confirm Password Reset' }}</h5>
+        <button type="button" class="btn-close btn-close-white" (click)="cancelAction()"></button>
+      </div>
+      <div class="modal-body">
+        <p *ngIf="actionType === 'delete'">
+          Are you sure you want to delete user "<strong>{{ userToAction.username }}</strong>"? This action cannot be undone.
+        </p>
+        <p *ngIf="actionType === 'reset'">
+          Are you sure you want to reset the password for user "<strong>{{ userToAction.username }}</strong>"?
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="cancelAction()">Cancel</button>
+        <button [ngClass]="actionType === 'delete' ? 'btn-danger' : 'btn-warning'" (click)="confirmAction()">
+          {{ actionType === 'delete' ? 'Yes, Delete' : 'Yes, Reset' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal-backdrop fade show" *ngIf="userToAction"></div>

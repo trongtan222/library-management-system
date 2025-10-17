@@ -1,49 +1,55 @@
-<header>
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-    <div class="container-fluid">
-      <a class="navbar-brand" style="color: rgb(241, 223, 223);" href="#">Library Management System</a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarSupportedContent">
-        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <div class="container-fluid">
+    <a class="navbar-brand" routerLink="/">Hệ Thống Quản Lý Thư Viện</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        
+        <li class="nav-item" *ngIf="isAdmin()">
+          <a class="nav-link" routerLink="/admin/dashboard" routerLinkActive="active">Bảng Điều Khiển</a>
+        </li>
+        <li class="nav-item" *ngIf="isAdmin()">
+          <a class="nav-link" routerLink="/users" routerLinkActive="active">Quản Lý Người Dùng</a>
+        </li>
+        <li class="nav-item" *ngIf="isAdmin()">
+          <a class="nav-link" routerLink="/books" routerLinkActive="active">Quản Lý Sách</a>
+        </li>
+        <li class="nav-item" *ngIf="isAdmin()">
+          <a class="nav-link" routerLink="/admin/loans" routerLinkActive="active">Quản Lý Mượn Trả</a>
+        </li>
+        <li class="nav-item" *ngIf="isAdmin()">
+          <a class="nav-link" routerLink="/admin/fines" routerLinkActive="active">Quản Lý Phí Phạt</a>
+        </li>
+        <li class="nav-item" *ngIf="isAdmin()">
+          <a class="nav-link" routerLink="/admin/reviews" routerLinkActive="active">Quản Lý Đánh Giá</a>
+        </li>
+        
+        <li class="nav-item" *ngIf="isUser()">
+          <a class="nav-link" routerLink="/borrow-book" routerLinkActive="active">Mượn Sách</a>
+        </li>
+        <li class="nav-item" *ngIf="isUser()">
+          <a class="nav-link" routerLink="/return-book" routerLinkActive="active">Trả Sách</a>
+        </li>
+        <li class="nav-item" *ngIf="isUser()">
+          <a class="nav-link" routerLink="/my-account" routerLinkActive="active">Tài Khoản Của Tôi</a>
+        </li>
+      </ul>
 
-          <li class="nav-item">
-            <a routerLink="/books" routerLinkActive="active" class="nav-link" *ngIf="userService.roleMatch(['Admin'])">Book List</a>
-          </li>
+      <div class="d-flex align-items-center">
+        <ng-container *ngIf="!isLoggedIn()">
+          <button class="btn btn-outline-light me-2" routerLink="/register">Đăng Ký</button>
+          <button class="btn btn-primary" routerLink="/login">Đăng Nhập</button>
+        </ng-container>
 
-          <li class="nav-item">
-            <a routerLink="/create-book" routerLinkActive="active" class="nav-link" *ngIf="userService.roleMatch(['Admin'])">Add Book</a>
-          </li>
-
-          <li class="nav-item">
-            <a routerLink="/users" routerLinkActive="active" class="nav-link" *ngIf="userService.roleMatch(['Admin'])">User List</a>
-          </li>
-
-          <li class="nav-item">
-            <a routerLink="/register-user" routerLinkActive="active" class="nav-link" *ngIf="userService.roleMatch(['Admin'])">Register User</a>
-          </li>
-
-          <li class="nav-item">
-            <a routerLink="/borrow-book" routerLinkActive="active" class="nav-link" *ngIf="userService.roleMatch(['User'])">Borrow Books</a>
-          </li>
-
-          <li class="nav-item">
-            <a routerLink="/return-book" routerLinkActive="active" class="nav-link" *ngIf="userService.roleMatch(['User'])">Return Books</a>
-          </li>
-
-          <li class="nav-item right-text" *ngIf="isLoggedIn()">
-            <div class="nav-link disabled text-right">
-              <strong>
-                Hey {{name}}
-              </strong>
-            </div>
-          </li>
-
-        </ul>
-        <button *ngIf="!isLoggedIn()" type="button" class="btn btn-success" routerLink="/login">Login</button>
-        <button *ngIf="isLoggedIn()" type="button" class="btn btn-danger" (click)="logout()">Logout</button>
+        <ng-container *ngIf="isLoggedIn()">
+          <span class="navbar-text me-3">
+            Chào, {{ getUserName() }}
+          </span>
+          <button class="btn btn-outline-danger" (click)="logout()">Đăng Xuất</button>
+        </ng-container>
       </div>
     </div>
-  </nav>
-</header>
+  </div>
+</nav>

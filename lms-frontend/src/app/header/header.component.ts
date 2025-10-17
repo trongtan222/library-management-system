@@ -1,7 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { UserAuthService } from '../_service/user-auth.service';
-import { UsersService } from '../_service/users.service';
+import { UserAuthService } from '../services/user-auth.service';
 
 @Component({
   selector: 'app-header',
@@ -11,22 +10,30 @@ import { UsersService } from '../_service/users.service';
 export class HeaderComponent implements OnInit {
 
   constructor(
-    private userAuthService: UserAuthService, 
-    private router: Router,
-    public userService: UsersService,
+    public userAuthService: UserAuthService, // public de dung truc tiep trong template
+    private router: Router
   ) { }
 
-  name = this.userAuthService.getName();
-  ngOnInit(): void {
-  }
+  ngOnInit(): void { }
 
-  public isLoggedIn() {
-    console.log(this.name);
+  public isLoggedIn(): boolean {
     return this.userAuthService.isLoggedIn();
   }
 
-  public logout() {
+  public getUserName(): string | null {
+    return this.userAuthService.getName();
+  }
+
+  public logout(): void {
     this.userAuthService.clear();
     this.router.navigate(['/']);
+  }
+
+  public isAdmin(): boolean {
+    return this.userAuthService.isAdmin();
+  }
+
+  public isUser(): boolean {
+    return this.userAuthService.isUser();
   }
 }
