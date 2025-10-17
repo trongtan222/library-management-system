@@ -3,11 +3,15 @@ package com.ibizabroker.lms.entity;
 public class JwtResponse {
 
     private Users user;
-    private String jwtToken;
+    private String token; // đổi tên cho thống nhất với FE
 
-    public JwtResponse(Users user, String jwtToken) {
+    public JwtResponse() {
+        // ⚙ bắt buộc cho Jackson
+    }
+
+    public JwtResponse(Users user, String token) {
         this.user = user;
-        this.jwtToken = jwtToken;
+        this.token = token;
     }
 
     public Users getUser() {
@@ -18,11 +22,11 @@ public class JwtResponse {
         this.user = user;
     }
 
-    public String getJwtToken() {
-        return jwtToken;
+    public String getToken() {
+        return token;
     }
 
-    public void setJwtToken(String jwtToken) {
-        this.jwtToken = jwtToken;
+    public void setToken(String token) {
+        this.token = token;
     }
 }

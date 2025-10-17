@@ -12,52 +12,65 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@CrossOrigin("http://localhost:4200/")
+@CrossOrigin(origins = "http://localhost:4200")
 @RestController
-@RequestMapping("/admin")
+@RequestMapping("/admin/books") // Đã có tiền tố /admin
 public class BooksController {
 
     @Autowired
     private BooksRepository booksRepository;
 
-    @GetMapping("/books")
-    public List<Books> getAllBooks(){
+    @GetMapping
+    public List<Books> getAllBooks() {
         return booksRepository.findAll();
     }
 
-    @PreAuthorize("hasRole('Admin')")
-    @GetMapping("/books/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/{id}")
     public ResponseEntity<Books> getBookById(@PathVariable Integer id) {
-        Books book = booksRepository.findById(id).orElseThrow(() -> new NotFoundException("Book with id "+ id +" does not exist."));
+        Books book = booksRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Book with id " + id + " does not exist."));
         return ResponseEntity.ok(book);
     }
 
-    @PreAuthorize("hasRole('Admin')")
-    @PostMapping("/books")
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping
     public Books createBook(@RequestBody Books book) {
+        book.setId(null);
         return booksRepository.save(book);
     }
+// ... (các phương thức còn lại không thay đổi)
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/{id}")
+    public ResponseEntity<Books> updateBook(@PathVariable Integer id, @RequestBody Books req) {
+        // Sửa ở đây
+        Books book = booksRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Book with id " + id + " does not exist."));
 
-    @PreAuthorize("hasRole('Admin')")
-    @PutMapping("/books/{id}")
-    public ResponseEntity<Books> updateBook(@PathVariable Integer id, @RequestBody Books bookDetails) {
-        Books book = booksRepository.findById(id).orElseThrow(() -> new NotFoundException("Book with id "+ id +" does not exist."));
+        if (req.getName() != null) book.setName(req.getName());
+        if (req.getAuthor() != null) book.setAuthor(req.getAuthor());
+        if (req.getGenre() != null) book.setGenre(req.getGenre());
+        if (req.getNumberOfCopiesAvailable() != null)
+            book.setNumberOfCopiesAvailable(req.getNumberOfCopiesAvailable());
+        if (req.getPublishedYear() != null) book.setPublishedYear(req.getPublishedYear());
+        if (req.getIsbn() != null) book.setIsbn(req.getIsbn());
+        
+        // Đảm bảo logic lưu coverUrl hoạt động
+        if (req.getCoverUrl() != null) {
+            book.setCoverUrl(req.getCoverUrl());
+        }
 
-        book.setBookName(bookDetails.getBookName());
-        book.setBookAuthor(bookDetails.getBookAuthor());
-        book.setBookGenre(bookDetails.getBookGenre());
-        book.setNoOfCopies(bookDetails.getNoOfCopies());
-
-        Books updatedBook = booksRepository.save(book);
-        return ResponseEntity.ok(updatedBook);
+        return ResponseEntity.ok(booksRepository.save(book));
     }
 
-    @PreAuthorize("hasRole('Admin')")
-    @DeleteMapping("/books/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping("/{id}")
     public ResponseEntity<Map<String, Boolean>> deleteBook(@PathVariable Integer id) {
-        Books book = booksRepository.findById(id).orElseThrow(() -> new NotFoundException("Book with id "+ id +" does not exist."));
-
+        // Sửa ở đây
+        Books book = booksRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Book with id " + id + " does not exist."));
         booksRepository.delete(book);
+
         Map<String, Boolean> response = new HashMap<>();
         response.put("deleted", Boolean.TRUE);
         return ResponseEntity.ok(response);
