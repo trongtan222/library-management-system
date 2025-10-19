@@ -67,11 +67,11 @@
 
     <div class="col-12 mb-4" *ngIf="activeView === 'books'">
       <div class="card shadow">
-        <div class="card-header"><h5 class="m-0 font-weight-bold">All Books</h5></div>
+        <div class="card-header"><h5 class="m-0 font-weight-bold">Tất Cả Sách</h5></div>
         <div class="card-body">
           <div class="table-responsive">
             <table class="table table-sm table-hover">
-              <thead><tr><th>ID</th><th>Name</th><th>Author</th><th>Available</th></tr></thead>
+              <thead><tr><th>ID</th><th>Tên</th><th>Tác Giả</th><th>Số Lượng</th></tr></thead>
               <tbody>
                 <tr *ngFor="let book of allBooks">
                   <td>{{ book.id }}</td><td>{{ book.name }}</td><td>{{ book.author }}</td><td>{{ book.numberOfCopiesAvailable }}</td>
@@ -85,11 +85,11 @@
     
     <div class="col-12 mb-4" *ngIf="activeView === 'users'">
         <div class="card shadow">
-            <div class="card-header"><h5 class="m-0 font-weight-bold">All Users</h5></div>
+            <div class="card-header"><h5 class="m-0 font-weight-bold">Tất Cả Người Dùng</h5></div>
             <div class="card-body">
                 <div class="table-responsive">
                     <table class="table table-sm table-hover">
-                        <thead><tr><th>ID</th><th>Name</th><th>Username</th><th>Roles</th></tr></thead>
+                        <thead><tr><th>ID</th><th>Tên</th><th>Tên Đăng Nhập</th><th>Vai Trò</th></tr></thead>
                         <tbody>
                             <tr *ngFor="let user of allUsers">
                                 <td>{{ user.userId }}</td><td>{{ user.name }}</td><td>{{ user.username }}</td><td>{{ user.roles.join(', ') }}</td>
@@ -103,11 +103,11 @@
 
     <div class="col-12 mb-4" *ngIf="activeView === 'activeLoans'">
         <div class="card shadow">
-            <div class="card-header"><h5 class="m-0 font-weight-bold">Active Loans</h5></div>
+            <div class="card-header"><h5 class="m-0 font-weight-bold">Đang Mượn</h5></div>
             <div class="card-body">
                 <div class="table-responsive">
                     <table class="table table-sm table-hover">
-                        <thead><tr><th>Book Name</th><th>User Name</th><th>Due Date</th></tr></thead>
+                        <thead><tr><th>Tên Sách</th><th>Tên Người Mượn</th><th>Ngày Hết Hạn</th></tr></thead>
                         <tbody>
                             <ng-container *ngFor="let loan of allLoans">
                                 <tr *ngIf="loan.status === 'ACTIVE'">
@@ -123,11 +123,11 @@
 
     <div class="col-12 mb-4" *ngIf="activeView === 'overdueLoans'">
         <div class="card shadow">
-            <div class="card-header bg-danger text-white"><h5 class="m-0 font-weight-bold">Overdue Loans</h5></div>
+            <div class="card-header bg-danger text-white"><h5 class="m-0 font-weight-bold">Khoản Vay Quá Hạn</h5></div>
             <div class="card-body">
                 <div class="table-responsive">
                     <table class="table table-sm table-hover">
-                        <thead><tr><th>Book Name</th><th>User Name</th><th>Due Date</th></tr></thead>
+                        <thead><tr><th>Tên Sách</th><th>Tên Người Mượn</th><th>Ngày Hết Hạn</th></tr></thead>
                         <tbody>
                             <tr *ngFor="let loan of allLoans">
                                 <tr *ngIf="loan.status === 'OVERDUE'">

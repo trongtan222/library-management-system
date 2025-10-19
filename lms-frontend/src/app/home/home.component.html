@@ -1,4 +1,11 @@
+<!-- Hero Section with Dynamic Aurora Background -->
 <section class="hero-panel">
+  <div class="aurora-background">
+    <div class="aurora__item"></div>
+    <div class="aurora__item"></div>
+    <div class="aurora__item"></div>
+    <div class="aurora__item"></div>
+  </div>
   <div class="hero-content">
     <div class="hero-text">
       <p class="eyebrow">CHÀO MỪNG TỚI</p>
@@ -7,37 +14,44 @@
         Khám phá – mượn – theo dõi sách yêu thích của bạn. Nhanh, gọn, mượt.
       </p>
       <form (ngSubmit)="searchBooks()" class="search-form">
-        <input [(ngModel)]="searchTerm" name="searchTerm" type="search"
-               placeholder="Tìm theo tên sách, tác giả…">
+        <i class="fa-solid fa-magnifying-glass search-icon"></i>
+        <input [(ngModel)]="searchTerm" name="searchTerm" type="search" placeholder="Tìm theo tên sách, tác giả…">
         <button class="btn-search" type="submit">Tìm Kiếm</button>
       </form>
       <div class="cta-buttons">
-        <a class="btn btn-primary" routerLink="/borrow-book">Xem Toàn Bộ Sách</a>
-        <a *ngIf="userAuthService.isAdmin()" class="btn btn-secondary" routerLink="/create-book">Thêm Sách Mới</a>
+        <a class="btn btn-primary" routerLink="/borrow-book">
+          <i class="fa-solid fa-swatchbook"></i>
+          <span>Xem Toàn Bộ Sách</span>
+        </a>
+        <a *ngIf="userAuthService.isAdmin()" class="btn btn-secondary" routerLink="/create-book">
+          <i class="fa-solid fa-plus"></i>
+          <span>Thêm Sách Mới</span>
+        </a>
       </div>
     </div>
     <figure class="hero-image" aria-hidden="true">
-      <img src="https://images.unsplash.com/photo-1532012197267-da84d127e765?q=80&w=1887" alt="Một người đang với tay lấy sách trên kệ" />
+      <img src="https://images.unsplash.com/photo-1532012197267-da84d127e765?q=80&w=1887&auto=format&fit=crop" alt="Một người đang với tay lấy sách trên kệ" />
     </figure>
   </div>
 </section>
 
+<!-- Categories Section -->
 <section class="categories-section">
   <div class="section-wrap">
     <h2 class="section-title">Thể Loại Phổ Biến</h2>
     <div class="category-chips">
-      <a class="chip" *ngFor="let category of categories"
-         [routerLink]="['/borrow-book']" [queryParams]="{ genre: category }">
+      <a class="chip" *ngFor="let category of categories" [routerLink]="['/borrow-book']" [queryParams]="{ genre: category }">
         {{ category }}
       </a>
     </div>
   </div>
 </section>
 
+<!-- Newest Books Section -->
 <section class="new-books-section">
   <div class="section-wrap">
     <div class="section-header">
-      <h2 class="section-title">Sách Mới Thêm</h2>
+      <h2 class="section-title">Sách Mới Nhất</h2>
       <a routerLink="/borrow-book" class="view-all-link">Xem tất cả →</a>
     </div>
 
@@ -45,9 +59,8 @@
       <div class="books-grid" *ngIf="books.length > 0; else empty">
         <a class="book-card" *ngFor="let book of books" [routerLink]="['/books', book.id]">
           <div class="book-cover">
-    <img [src]="book.coverUrl || 'https://placehold.co/200x300/1f2937/d1d5db?text=' + (book.name | slice:0:12)" 
-         alt="Bìa sách {{ book.name }}">
-</div>
+            <img [src]="book.coverUrl || 'https://placehold.co/200x300/161B22/8b949e?text=' + (book.name | slice:0:1)" alt="Bìa sách {{ book.name }}">
+          </div>
           <div class="book-info">
             <h3 class="book-title">{{ book.name }}</h3>
             <p class="book-author">{{ book.author }}</p>
@@ -67,3 +80,17 @@
     </ng-template>
   </div>
 </section>
+
+<!-- Footer Section -->
+<footer class="site-footer">
+  <div class="section-wrap">
+    <div class="footer-content">
+      <p>&copy; 2025 Library Management System. Tất cả quyền được bảo lưu.</p>
+      <nav class="footer-nav">
+        <a routerLink="/about">Về chúng tôi</a>
+        <a routerLink="/privacy">Chính sách</a>
+        <a routerLink="/contact">Liên hệ</a>
+      </nav>
+    </div>
+  </div>
+</footer>

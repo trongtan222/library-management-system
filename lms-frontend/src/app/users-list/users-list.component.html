@@ -1,15 +1,15 @@
 <h2 class="d-flex justify-content-between align-items-center">
-  User List
-  <a routerLink="/create-user" class="btn btn-primary">Create New User</a>
+  Quản Lí Người Dùng
+  <a routerLink="/create-user" class="btn btn-primary">Tạo Người Dùng Mới</a>
 </h2>
 <table class="table table-success table-striped">
     <thead>
         <tr>
-            <th>User ID</th>
-            <th>Name</th>
-            <th>Username</th>
-            <th>Roles</th>
-            <th>Actions</th>
+            <th>ID </th>
+            <th>Tên</th>
+            <th>Tên Đăng Nhập</th>
+            <th>Vai Trò</th>
+            <th>Hành Động</th>
         </tr>
     </thead>
     <tbody>
@@ -19,9 +19,9 @@
             <td>{{ user.username }}</td>
             <td>{{ user.roles.join(', ') }}</td>
             <td>
-                <button (click)="updateUser(user.userId)" class="btn btn-info btn-sm">Edit</button>
-                <button (click)="openConfirmModal(user, 'reset')" class="btn btn-warning btn-sm mx-2">Reset Password</button>
-                <button (click)="openConfirmModal(user, 'delete')" class="btn btn-danger btn-sm">Delete</button>
+                <button (click)="updateUser(user.userId)" class="btn btn-info btn-sm">Chỉnh Sửa</button>
+                <button (click)="openConfirmModal(user, 'reset')" class="btn btn-warning btn-sm mx-2">Đặt Lại Mật Khẩu</button>
+                <button (click)="openConfirmModal(user, 'delete')" class="btn btn-danger btn-sm">Xóa</button>
             </td>
         </tr>
     </tbody>
@@ -43,9 +43,9 @@
         </p>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" (click)="cancelAction()">Cancel</button>
+        <button type="button" class="btn btn-secondary" (click)="cancelAction()">Hủy</button>
         <button [ngClass]="actionType === 'delete' ? 'btn-danger' : 'btn-warning'" (click)="confirmAction()">
-          {{ actionType === 'delete' ? 'Yes, Delete' : 'Yes, Reset' }}
+          {{ actionType === 'delete' ? 'Có, Xóa' : 'Có, Đặt Lại' }}
         </button>
       </div>
     </div>

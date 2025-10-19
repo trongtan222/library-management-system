@@ -1,15 +1,15 @@
 <div class="container-fluid mt-4">
-  <h1 class="mb-4">Manage Unpaid Fines</h1>
+  <h1 class="mb-4">Quản Lý Phí Trễ Hạn</h1>
   <div *ngIf="isLoading" class="text-center">Loading...</div>
   <table *ngIf="!isLoading" class="table table-hover">
     <thead>
       <tr>
-        <th>Loan ID</th>
-        <th>User</th>
-        <th>Book</th>
-        <th>Overdue Days</th>
-        <th>Fine Amount</th>
-        <th>Actions</th>
+        <th>ID Mượn</th>
+        <th>Tên Người Dùng</th>
+        <th>Tên Sách</th>
+        <th>Số Ngày Quá Hạn</th>
+        <th>Số Tiền Phạt</th>
+        <th>Hành Động</th>
       </tr>
     </thead>
     <tbody>
@@ -20,7 +20,7 @@
         <td>{{ fine.overdueDays }}</td>
         <td>{{ fine.fineAmount | currency:'VND' }}</td>
         <td>
-          <button class="btn btn-success btn-sm" (click)="markAsPaid(fine.loanId)">Mark as Paid</button>
+          <button class="btn btn-success btn-sm" (click)="markAsPaid(fine.loanId)">Đánh Dấu Là Đã Thanh Toán</button>
         </td>
       </tr>
     </tbody>

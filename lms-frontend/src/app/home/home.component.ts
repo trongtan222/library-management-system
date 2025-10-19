@@ -15,7 +15,16 @@ import { catchError, map } from 'rxjs/operators';
 export class HomeComponent implements OnInit {
 
   searchTerm: string = '';
-  categories = ['Fiction', 'Science', 'Non-fiction', 'Computer Science', 'History', 'Technology'];
+  categories = [
+    'Tiểu thuyết',
+    'Khoa học',
+    'Lịch sử',
+    'Phát triển bản thân',
+    'Khoa học máy tính',
+    'Kinh doanh',
+    'Giả tưởng',
+    'Trinh thám'
+  ];
   newestBooks$!: Observable<Books[]>;
 
   constructor(
@@ -33,7 +42,6 @@ export class HomeComponent implements OnInit {
           genre: b.genre,
           publishedYear: b.publishedYear,
           isbn: b.isbn,
-          // SỬA LỖI Ở ĐÂY
           numberOfCopiesAvailable: b.numberOfCopiesAvailable
         }))
       ),
