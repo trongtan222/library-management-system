@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/user/circulation") // Đã cập nhật tiền tố chung
+@RequestMapping("/api/user/circulation") // <--- THÊM /api VÀO ĐÂY
 @CrossOrigin("http://localhost:4200/")
 @RequiredArgsConstructor
 public class CirculationController {

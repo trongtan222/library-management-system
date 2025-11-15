@@ -76,7 +76,7 @@ public class ReviewController {
 
     // --- API CHO ADMIN ---
 
-    @GetMapping("/admin/reviews") // <-- Đảm bảo endpoint này tồn tại
+    @GetMapping("/api/admin/reviews") // <-- Đảm bảo endpoint này tồn tại
     @PreAuthorize("hasRole('ADMIN')")
     public List<ReviewDto> getAllReviews() {
         return reviewRepository.findAllByOrderByCreatedAtDesc().stream()
@@ -99,7 +99,7 @@ public class ReviewController {
     }
 
 
-    @PutMapping("/admin/reviews/{reviewId}/approve")
+    @PutMapping("/api/admin/reviews/{reviewId}/approve")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ReviewDto> approveReview(@PathVariable Integer reviewId) {
         Review review = reviewRepository.findById(reviewId)

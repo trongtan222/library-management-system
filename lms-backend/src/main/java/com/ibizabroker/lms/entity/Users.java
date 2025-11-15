@@ -28,6 +28,7 @@ public class Users {
     @Column(length = 100)
     private String name;
 
+    // === THÊM TRƯỜNG EMAIL VÀO ĐÂY ===
     @Column(length = 100)
     private String email;
 
@@ -40,6 +41,7 @@ public class Users {
     )
     private Set<Role> roles = new HashSet<>();
 
+    // Getters and Setters
     public Integer getUserId() { return userId; }
     public void setUserId(Integer userId) { this.userId = userId; }
 
@@ -55,6 +57,7 @@ public class Users {
     public Set<Role> getRoles() { return roles; }
     public void setRoles(Set<Role> roles) { this.roles = roles; }
 
+    // === THÊM GETTER/SETTER CHO EMAIL ===
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
 

@@ -7,6 +7,8 @@ import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
+import java.nio.charset.StandardCharsets;
+import io.jsonwebtoken.io.DecodingException;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
@@ -25,11 +27,30 @@ public class JwtUtil {
 
   private SecretKey key() {
     try {
-      return Keys.hmacShaKeyFor(Decoders.BASE64.decode(secret));
-    } catch (IllegalArgumentException e) {
-      return Keys.hmacShaKeyFor(secret.getBytes());
+        // Vẫn giữ nguyên: Thử giải mã Base64 trước
+        return Keys.hmacShaKeyFor(Decoders.BASE64.decode(secret));
+    } catch (DecodingException e) { 
+        // SỬA LẠI: Bắt đúng DecodingException
+        // Dùng secret như văn bản thuần túy (plain text) với mã hóa UTF-8
+        return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
+}
+
+// ⭐ BẮT ĐẦU THÊM TỪ ĐÂY
+  /**
+   * Dùng cho mục đích Test (Unit Test)
+   */
+  public void setSecret(String secret) {
+      this.secret = secret;
   }
+
+  /**
+   * Dùng cho mục đích Test (Unit Test)
+   */
+  public void setExpirationMs(long expirationMs) {
+      this.expirationMs = expirationMs;
+  }
+  // ⭐ KẾT THÚC THÊM Ở ĐÂY
 
   /** ✅ Dùng hàm này: thêm extra claims (userId, roles, ...) */
   public String generateToken(UserDetails user, Map<String, Object> extra) {
@@ -64,11 +85,11 @@ public class JwtUtil {
   }
 
   private Claims parseAllClaims(String token) {
-    return Jwts.parserBuilder()
-        .setSigningKey(key())
+    return Jwts.parser()
+        .verifyWith(key())
         .build()
-        .parseClaimsJws(token)
-        .getBody();
+        .parseSignedClaims(token)
+        .getPayload();
   }
 
   /** ❌ Không dùng nữa */

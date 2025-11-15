@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 
 @RestController
-@RequestMapping("/admin/dashboard")
+@RequestMapping("/api/admin/dashboard")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "http://localhost:4200")
 public class AdminDashboardController {

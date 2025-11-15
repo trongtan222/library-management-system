@@ -17,7 +17,7 @@ export interface AuthResponse {
 
 @Injectable({ providedIn: 'root' })
 export class UsersService {
-  private API_URL = `${environment.apiRoot}`;
+  private API_URL = environment.apiBaseUrl; // Already includes /api
   private noAuthHeader = new HttpHeaders({ 'No-Auth': 'True' });
 
   constructor(

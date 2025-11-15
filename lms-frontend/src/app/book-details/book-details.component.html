@@ -19,9 +19,11 @@
       <div class="col-md-8">
         <div class="card-body">
           <h2 class="card-title">{{ book.name }}</h2>
-          <h5 class="card-subtitle mb-2">bởi {{ book.author }}</h5>
+          <h5 class="card-subtitle mb-2">bởi 
+            <span *ngFor="let a of book.authors; let last = last">{{ a.name }}{{ !last ? ', ' : '' }}</span>
+          </h5>
           <p class="card-text">
-            <span class="badge bg-secondary me-2">{{ book.genre }}</span>
+            <span *ngFor="let c of book.categories" class="badge bg-secondary me-2">{{ c.name }}</span>
             <span class="text-muted">Xuất bản năm {{ book.publishedYear }}</span>
           </p>
           <hr>

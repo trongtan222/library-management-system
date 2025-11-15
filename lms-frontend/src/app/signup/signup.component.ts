@@ -5,14 +5,16 @@ import { UsersService } from '../services/users.service'; // Giả sử bạn d�
 import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
-  selector: 'app-signup', // Đã đổi tên
-  templateUrl: './signup.component.html',
-  styleUrls: ['./signup.component.css']
+    selector: 'app-signup',
+    templateUrl: './signup.component.html',
+    styleUrls: ['./signup.component.css'],
+    standalone: false
 })
-export class SignupComponent { // Đã đổi tên class
+export class SignupComponent {
   // Model để binding với form
   public model = {
     name: '',
+    email: '', // <-- THÊM TRƯỜNG EMAIL
     username: '',
     password: '',
     confirmPassword: ''
@@ -30,7 +32,7 @@ export class SignupComponent { // Đã đổi tên class
     private router: Router
   ) {}
 
-  public signup(form: NgForm): void { // Đổi tên hàm cho rõ nghĩa
+  public signup(form: NgForm): void {
     if (form.invalid || this.model.password !== this.model.confirmPassword) {
       this.errorMessage = 'Please check the errors on the form.';
       return;
@@ -40,8 +42,10 @@ export class SignupComponent { // Đã đổi tên class
     this.errorMessage = null;
     this.fieldErrors = {};
 
+    // Cập nhật payload để bao gồm cả email
     const payload = {
       name: this.model.name,
+      email: this.model.email, // <-- THÊM EMAIL VÀO PAYLOAD
       username: this.model.username,
       password: this.model.password
     };

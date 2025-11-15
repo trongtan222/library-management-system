@@ -52,8 +52,8 @@ export interface ReportSummary {
   providedIn: 'root'
 })
 export class AdminService {
-  // SỬA LỖI: Bỏ /api khỏi đây vì nó đã có trong environment.apiRoot
-  private API_URL = `${environment.apiRoot}/admin`;
+  // environment.apiBaseUrl already includes /api
+  private API_URL = `${environment.apiBaseUrl}/admin`;
 
   constructor(private http: HttpClient) { }
 

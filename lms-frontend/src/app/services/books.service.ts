@@ -12,12 +12,22 @@ export interface Page<T> {
   size: number;
 }
 
+// THÊM 2 INTERFACE NÀY
+export interface Author {
+  id: number;
+  name: string;
+}
+export interface Category {
+  id: number;
+  name: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class BooksService {
-  private API_URL = `${environment.apiRoot}`;
-  // SỬA LỖI: Bỏ /api khỏi các đường dẫn con
+  private API_URL = environment.apiBaseUrl;
+  // environment.apiBaseUrl already includes /api
   private ADMIN_URL = `${this.API_URL}/admin/books`;
   private PUBLIC_URL = `${this.API_URL}/public/books`;
 
@@ -72,5 +82,14 @@ export class BooksService {
 
   public deleteBook(id: number): Observable<Object> {
     return this.httpClient.delete(`${this.ADMIN_URL}/${id}`);
+  }
+
+  // --- SỬA LỖI BẰNG CÁCH THÊM 2 HÀM NÀY ---
+  public getAllAuthors(): Observable<Author[]> {
+    return this.httpClient.get<Author[]>(`${this.ADMIN_URL}/authors`);
+  }
+
+  public getAllCategories(): Observable<Category[]> {
+    return this.httpClient.get<Category[]>(`${this.ADMIN_URL}/categories`);
   }
 }

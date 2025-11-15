@@ -6,8 +6,8 @@ import { FineDetails } from './admin.service';
 
 @Injectable({ providedIn: 'root' })
 export class CirculationService {
-    // SỬA LỖI: Bỏ /api khỏi đây
-    private base = `${environment.apiRoot}/user/circulation`;
+    // environment.apiBaseUrl already includes /api
+    private base = `${environment.apiBaseUrl}/user/circulation`;
 
     constructor(private http: HttpClient) { }
 

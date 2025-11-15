@@ -8,9 +8,10 @@ import { Books } from '../models/books';
 import { CirculationService } from '../services/circulation.service'; // Import CirculationService
 
 @Component({
-  selector: 'app-borrow-book',
-  templateUrl: './borrow-book.component.html',
-  styleUrls: ['./borrow-book.component.css']
+    selector: 'app-borrow-book',
+    templateUrl: './borrow-book.component.html',
+    styleUrls: ['./borrow-book.component.css'],
+    standalone: false
 })
 export class BorrowBookComponent implements OnInit {
   
@@ -83,8 +84,14 @@ export class BorrowBookComponent implements OnInit {
   }
   
   loadAllGenres(): void {
+    // SỬA LỖI TRONG HÀM NÀY
     this.booksService.getPublicBooks(false, '', '', 0, 1000).subscribe(page => {
-        this.genres = [...new Set(page.content.map(b => b.genre).filter(Boolean) as string[])];
+        // b.genre không còn tồn tại, ta phải lặp qua b.categories
+        const allGenres = page.content
+          .flatMap(b => b.categories) // Lấy mảng categories từ mỗi book
+          .map(c => c.name)            // Lấy tên
+          .filter(Boolean);            // Lọc ra null/undefined
+        this.genres = [...new Set(allGenres)]; // Lấy duy nhất
     });
   }
 

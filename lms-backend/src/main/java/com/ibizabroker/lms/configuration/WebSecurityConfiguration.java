@@ -59,6 +59,7 @@ public class WebSecurityConfiguration {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration c = new CorsConfiguration();
+        // Cấu hình này đã đúng, cho phép frontend của bạn
         c.setAllowedOrigins(List.of("http://localhost:4200"));
         c.setAllowedMethods(List.of("GET","POST","PUT","PATCH","DELETE","OPTIONS"));
         c.setAllowedHeaders(List.of("*"));
@@ -72,27 +73,35 @@ public class WebSecurityConfiguration {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
-            .cors(Customizer.withDefaults())
+            .cors(Customizer.withDefaults()) // Sử dụng CorsConfigurationSource ở trên
             .exceptionHandling(e -> e.authenticationEntryPoint(authenticationEntryPoint))
             .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            
+            // ⭐ SỬA LỖI 401: Thêm lại tiền tố /api vào các quy tắc
             .authorizeHttpRequests(a -> a
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                // SỬA LỖI: Bỏ tiền tố /api khỏi tất cả các quy tắc
                 .requestMatchers(
-                    "/auth/**",
+                    "/api/auth/**", // ĐÃ THÊM /api
+                    "/api/public/**", // ĐÃ THÊM /api (Cho phép mọi phương thức GET, POST...)
+                    
+                    // Các đường dẫn cho Swagger/Docs/Error (giữ nguyên)
                     "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html",
                     "/h2-console/**",
                     "/error", "/favicon.ico"
                 ).permitAll()
-                .requestMatchers(HttpMethod.GET, "/public/**").permitAll()
-                .requestMatchers("/user/**").hasRole("USER")
-                .requestMatchers("/admin/**").hasRole("ADMIN")
+                
+                // Quy tắc cũ cho /public/** đã được gộp vào quy tắc trên
+                
+                .requestMatchers("/api/user/**").hasRole("USER") // ĐÃ THÊM /api
+                .requestMatchers("/api/admin/**").hasRole("ADMIN") // ĐÃ THÊM /api
+                
                 .anyRequest().authenticated()
             )
             .authenticationProvider(authenticationProvider())
             .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
 
-        http.headers(h -> h.frameOptions(f -> f.disable()));
+        // Cần thiết cho H2 Console (nếu dùng)
+        http.headers(h -> h.frameOptions(f -> f.disable())); 
         return http.build();
     }
 }

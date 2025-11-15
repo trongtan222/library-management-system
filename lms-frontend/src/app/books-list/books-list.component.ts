@@ -1,34 +1,30 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { BooksService } from '../services/books.service';
+import { BooksService, Page } from '../services/books.service'; // Sửa: Import thêm Page
 import { CirculationService } from '../services/circulation.service';
 import { ToastrService } from 'ngx-toastr';
+import { Books } from '../models/books'; // Import model
 
-type Row = {
-  id: number;
-  name: string;
-  author: string;
-  genre: string;
-  available: number;
-  publishedYear?: number | null;
-  isbn?: string | null;
-};
+type Row = Books; // Giữ nguyên: Row là bí danh của Books
 
 @Component({
-  selector: 'app-books-list',
-  templateUrl: './books-list.component.html',
-  styleUrls: ['./books-list.component.css']
+    selector: 'app-books-list',
+    templateUrl: './books-list.component.html',
+    styleUrls: ['./books-list.component.css'],
+    standalone: false
 })
 export class BooksListComponent implements OnInit {
 
-  rows: Row[] = [];
-  filteredRows: Row[] = [];
-  pagedRows: Row[] = [];
+  // Sửa: Chỉ cần 1 mảng books
+  books: Row[] = []; 
+  
+  // Bỏ: filteredRows và pagedRows
 
   loading = new Set<number>();
   page = 1;
-  pageSize = 5;
+  pageSize = 10; // Đổi default size
   totalPages = 0;
+  totalElements = 0; // Thêm
   pageSizes = [5, 10, 20, 50];
   searchTerm = '';
 
@@ -57,73 +53,55 @@ export class BooksListComponent implements OnInit {
     private toastr: ToastrService
   ) {}
 
-  ngOnInit(): void { this.getBooks(); }
+  ngOnInit(): void { this.loadBooks(); } // Đổi tên hàm
 
-  private getBooks() {
-    this.booksService.getBooksList().subscribe({
-      next: (data: any[]) => {
-        this.rows = data.map((b: any) => ({
-          id: b.id ?? b.bookId,
-          name: b.name ?? b.bookName,
-          author: b.author ?? b.bookAuthor,
-          genre: b.genre ?? b.bookGenre,
-          available: b.numberOfCopiesAvailable ?? b.noOfCopies ?? 0,
-          publishedYear: b.publishedYear ?? null,
-          isbn: b.isbn ?? null
-        }));
-        this.applyFilters(1);
+  // --- HÀM TẢI DỮ LIỆU ĐÃ SỬA (SERVER-SIDE) ---
+  public loadBooks(goToPage: number = this.page) {
+    this.page = goToPage;
+    // Gọi getPublicBooks với availableOnly = false
+    this.booksService.getPublicBooks(
+      false, // Lấy tất cả sách (cả hết hàng)
+      this.searchTerm.trim() || null,
+      null, // Admin không cần lọc genre
+      this.page - 1,
+      this.pageSize
+    ).subscribe({
+      next: (data: Page<Books>) => {
+        // SỬA: Không cần map, gán trực tiếp
+        this.books = data.content; 
+        this.totalPages = data.totalPages;
+        this.totalElements = data.totalElements;
       },
       error: (err: any) => this.toastError(err)
     });
   }
 
-  private norm(s: string): string {
-    return (s || '')
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '');
+  // --- XÓA CÁC HÀM LỌC CŨ ---
+  // Xóa: private norm(s: string)
+  // Xóa: private match(row: Row, term: string)
+  // Xóa: applyFilters(goTo?: number)
+  // Xóa: private rebuildPage(goTo: number)
+
+  // --- SỬA CÁC HÀM PHÂN TRANG ---
+  setPage(p: number) { this.loadBooks(p); }
+  prevPage() { if (this.page > 1) this.loadBooks(this.page - 1); }
+  nextPage() { if (this.page < this.totalPages) this.loadBooks(this.page + 1); }
+  
+  // Sửa: Lấy giá trị từ $event.target.value
+  changePageSize(event: any) { 
+    this.pageSize = +(event.target.value); 
+    this.loadBooks(1); 
   }
-
-  private match(row: Row, term: string): boolean {
-    if (!term) return true;
-    const t = this.norm(term);
-    return (
-      String(row.id).includes(t) ||
-      this.norm(row.name).includes(t) ||
-      this.norm(row.author).includes(t) ||
-      this.norm(row.genre).includes(t) ||
-      this.norm(String(row.publishedYear ?? '')).includes(t) ||
-      this.norm(row.isbn ?? '').includes(t)
-    );
-  }
-
-  applyFilters(goTo?: number) {
-    const term = this.searchTerm.trim();
-    this.filteredRows = this.rows.filter(r => this.match(r, term));
-    this.rebuildPage(goTo ?? this.page);
-  }
-
-  private rebuildPage(goTo: number) {
-    this.totalPages = Math.max(1, Math.ceil(this.filteredRows.length / this.pageSize));
-    this.page = Math.min(Math.max(1, goTo), this.totalPages);
-    const start = (this.page - 1) * this.pageSize;
-    const end = start + this.pageSize;
-    this.pagedRows = this.filteredRows.slice(start, end);
-  }
-
-  setPage(p: number) { this.rebuildPage(p); }
-  prevPage() { if (this.page > 1) this.rebuildPage(this.page - 1); }
-  nextPage() { if (this.page < this.totalPages) this.rebuildPage(this.page + 1); }
-  changePageSize(s: number) { this.pageSize = +s; this.applyFilters(1); }
-
 
   updateBook(bookId: number) { this.router.navigate(['update-book', bookId]); }
 
   bookDetails(bookId: number) { this.router.navigate(['book-details', bookId]); }
 
-  // --- Borrow Modal Logic ---
+  // --- Logic Modal (giữ nguyên, chỉ sửa hàm callback) ---
+
   openBorrow(row: Row) {
-    if (row.available <= 0 || this.loading.has(row.id)) return;
+    // Sửa: Dùng 'numberOfCopiesAvailable'
+    if (row.numberOfCopiesAvailable <= 0 || this.loading.has(row.id)) return;
     this.borrowingRow = row;
     this.borrowForm = {
       memberId: 0,
@@ -147,6 +125,7 @@ export class BooksListComponent implements OnInit {
     if (loanDays <= 0) {
       return this.toastError({ message: 'Due date must be in the future.' });
     }
+
     const row = this.borrowingRow;
     this.loading.add(row.id);
     this.circulation.loan({ bookId: row.id, memberId: Number(memberId), loanDays }).subscribe({
@@ -154,7 +133,7 @@ export class BooksListComponent implements OnInit {
         this.loading.delete(row.id);
         this.toastOk(`Loan created for "${row.name}"`);
         this.closeBorrow();
-        this.getBooks();
+        this.loadBooks(this.page); // Sửa: Tải lại trang hiện tại
       },
       error: (err: any) => {
         this.loading.delete(row.id);
@@ -163,7 +142,7 @@ export class BooksListComponent implements OnInit {
     });
   }
 
-  // --- Reserve Modal Logic ---
+  // --- Reserve Modal Logic (giữ nguyên) ---
   openReserve(row: Row) {
     if (this.loading.has(row.id)) return;
     this.reservingRow = row;
@@ -226,7 +205,7 @@ export class BooksListComponent implements OnInit {
     this.booksService.deleteBook(bookToDeleteCopy.id).subscribe({
       next: () => {
         this.toastOk(`Book "${bookToDeleteCopy.name}" was deleted.`);
-        this.getBooks(); // Tải lại danh sách
+        this.loadBooks(this.page); // Sửa: Tải lại trang hiện tại
       },
       error: (err: any) => this.toastError(err)
     });

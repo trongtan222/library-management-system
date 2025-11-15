@@ -1,78 +1,65 @@
 package com.ibizabroker.lms.controller;
 
-import com.ibizabroker.lms.dao.BooksRepository;
+import com.ibizabroker.lms.dto.BookCreateDto; // Import DTO
+import com.ibizabroker.lms.dto.BookUpdateDto; // Import DTO
+import com.ibizabroker.lms.entity.Author;
 import com.ibizabroker.lms.entity.Books;
-import com.ibizabroker.lms.exceptions.NotFoundException;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.ibizabroker.lms.entity.Category;
+import com.ibizabroker.lms.service.BookService; // Import service
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor; // Thêm
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 @CrossOrigin(origins = "http://localhost:4200")
 @RestController
-@RequestMapping("/admin/books") // Đã có tiền tố /admin
+@RequestMapping("/api/admin/books") // <--- THÊM /api
+@PreAuthorize("hasRole('ADMIN')") // Bảo vệ tất cả các endpoint trong controller này
+@RequiredArgsConstructor // Thêm
 public class BooksController {
 
-    @Autowired
-    private BooksRepository booksRepository;
+    private final BookService bookService; // Chỉ inject service
 
-    @GetMapping
-    public List<Books> getAllBooks() {
-        return booksRepository.findAll();
-    }
+    // GET /admin/books đã bị xóa, vì admin sẽ dùng
+    // GET /public/books?availableOnly=false (đã được phân trang)
 
-    @PreAuthorize("hasRole('ADMIN')")
+    // API này giữ lại (hoặc chuyển sang PublicBooksController)
     @GetMapping("/{id}")
     public ResponseEntity<Books> getBookById(@PathVariable Integer id) {
-        Books book = booksRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Book with id " + id + " does not exist."));
+        Books book = bookService.getBookById(id);
         return ResponseEntity.ok(book);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
-    public Books createBook(@RequestBody Books book) {
-        book.setId(null);
-        return booksRepository.save(book);
+    public Books createBook(@Valid @RequestBody BookCreateDto bookDto) { // Dùng DTO
+        return bookService.createBook(bookDto);
     }
-// ... (các phương thức còn lại không thay đổi)
-    @PreAuthorize("hasRole('ADMIN')")
+
     @PutMapping("/{id}")
-    public ResponseEntity<Books> updateBook(@PathVariable Integer id, @RequestBody Books req) {
-        // Sửa ở đây
-        Books book = booksRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Book with id " + id + " does not exist."));
-
-        if (req.getName() != null) book.setName(req.getName());
-        if (req.getAuthor() != null) book.setAuthor(req.getAuthor());
-        if (req.getGenre() != null) book.setGenre(req.getGenre());
-        if (req.getNumberOfCopiesAvailable() != null)
-            book.setNumberOfCopiesAvailable(req.getNumberOfCopiesAvailable());
-        if (req.getPublishedYear() != null) book.setPublishedYear(req.getPublishedYear());
-        if (req.getIsbn() != null) book.setIsbn(req.getIsbn());
-        
-        // Đảm bảo logic lưu coverUrl hoạt động
-        if (req.getCoverUrl() != null) {
-            book.setCoverUrl(req.getCoverUrl());
-        }
-
-        return ResponseEntity.ok(booksRepository.save(book));
+    public ResponseEntity<Books> updateBook(@PathVariable Integer id, @Valid @RequestBody BookUpdateDto bookDto) { // Dùng DTO
+        Books updatedBook = bookService.updateBook(id, bookDto);
+        return ResponseEntity.ok(updatedBook);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Map<String, Boolean>> deleteBook(@PathVariable Integer id) {
-        // Sửa ở đây
-        Books book = booksRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Book with id " + id + " does not exist."));
-        booksRepository.delete(book);
+        bookService.deleteBook(id);
+        return ResponseEntity.ok(Map.of("deleted", Boolean.TRUE));
+    }
 
-        Map<String, Boolean> response = new HashMap<>();
-        response.put("deleted", Boolean.TRUE);
-        return ResponseEntity.ok(response);
+    // --- API mới để hỗ trợ form ---
+    
+    @GetMapping("/authors")
+    public List<Author> getAllAuthors() {
+        return bookService.getAllAuthors();
+    }
+
+    @GetMapping("/categories")
+    public List<Category> getAllCategories() {
+        return bookService.getAllCategories();
     }
 }

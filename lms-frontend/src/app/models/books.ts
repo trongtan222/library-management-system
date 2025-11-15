@@ -1,11 +1,22 @@
+// Định nghĩa interface cho Author và Category
+export interface Author {
+  id: number;
+  name: string;
+}
+
+export interface Category {
+  id: number;
+  name: string;
+}
+
+// Model chính
 export interface Books {
   id: number;
   name: string;
-  author: string;
-  genre: string;
+  authors: Author[]; // Phải là mảng Author
+  categories: Category[]; // Phải là mảng Category
   publishedYear: number;
   isbn: string;
-  // SỬA DÒNG NÀY: đổi noOfCopies thành numberOfCopiesAvailable
   numberOfCopiesAvailable: number; 
   coverUrl?: string;
 }

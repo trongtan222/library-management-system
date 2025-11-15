@@ -14,7 +14,7 @@ import java.util.List;
 
 @CrossOrigin("http://localhost:4200/")
 @RestController
-@RequestMapping("/public/books")
+@RequestMapping("/api/public/books") // <--- THÊM /api
 @RequiredArgsConstructor
 public class PublicBooksController {
 
@@ -34,6 +34,7 @@ public class PublicBooksController {
 
     @GetMapping("/{id}")
     public ResponseEntity<Books> getBookById(@PathVariable Integer id) {
+        // Hàm này tự động gọi findById đã override (có JOIN FETCH)
         Books book = booksRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Book with id " + id + " not found."));
         return ResponseEntity.ok(book);
@@ -41,6 +42,8 @@ public class PublicBooksController {
 
     @GetMapping("/newest")
     public List<Books> getNewestBooks() {
-        return booksRepository.findTop10ByOrderByIdDesc();
+        // SỬA LỖI Ở ĐÂY: Gọi hàm mới với Pageable
+        Pageable limit = PageRequest.of(0, 10);
+        return booksRepository.findNewestBooks(limit);
     }
 }

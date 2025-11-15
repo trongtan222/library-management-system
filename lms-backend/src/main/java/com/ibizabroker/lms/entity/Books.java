@@ -1,10 +1,11 @@
 package com.ibizabroker.lms.entity;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.persistence.*;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
+import java.util.HashSet;
+import java.util.Set;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Entity
@@ -15,18 +16,31 @@ public class Books {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    // FE cũ có "bookName" → vẫn nhận được nhờ @JsonAlias
     @JsonAlias({"bookName"})
     private String name;
 
-    @JsonAlias({"bookAuthor"})
-    private String author;
+    // --- THAY ĐỔI 1: Đổi LAZY thành EAGER ---
+    @ManyToMany(fetch = FetchType.EAGER) // <-- SỬA DÒNG NÀY
+    @JoinTable(
+        name = "book_authors",
+        joinColumns = @JoinColumn(name = "book_id"),
+        inverseJoinColumns = @JoinColumn(name = "author_id")
+    )
+    private Set<Author> authors = new HashSet<>();
 
-    @JsonAlias({"bookGenre"})
-    private String genre;
+
+    // --- THAY ĐỔI 2: Đổi LAZY thành EAGER ---
+    @ManyToMany(fetch = FetchType.EAGER) // <-- SỬA DÒNG NÀY
+    @JoinTable(
+        name = "book_categories",
+        joinColumns = @JoinColumn(name = "book_id"),
+        inverseJoinColumns = @JoinColumn(name = "category_id")
+    )
+    private Set<Category> categories = new HashSet<>();
+
 
     @Column(name = "number_of_copies_available")
-    @JsonAlias({"noOfCopies", "numberOfCopies"}) // phòng có tên khác
+    @JsonAlias({"noOfCopies", "numberOfCopies"})
     private Integer numberOfCopiesAvailable;
 
     @Column(name = "published_year")
@@ -35,18 +49,21 @@ public class Books {
     @Column(length = 32)
     private String isbn;
 
-    // ===== getters/setters =====
+    @Column(name = "cover_url", length = 512)
+    private String coverUrl;
+
+    // ===== getters/setters (Giữ nguyên) =====
     public Integer getId() { return id; }
     public void setId(Integer id) { this.id = id; }
 
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
 
-    public String getAuthor() { return author; }
-    public void setAuthor(String author) { this.author = author; }
+    public Set<Author> getAuthors() { return authors; }
+    public void setAuthors(Set<Author> authors) { this.authors = authors; }
 
-    public String getGenre() { return genre; }
-    public void setGenre(String genre) { this.genre = genre; }
+    public Set<Category> getCategories() { return categories; }
+    public void setCategories(Set<Category> categories) { this.categories = categories; }
 
     public Integer getNumberOfCopiesAvailable() { return numberOfCopiesAvailable; }
     public void setNumberOfCopiesAvailable(Integer v) { this.numberOfCopiesAvailable = v; }
@@ -56,28 +73,21 @@ public class Books {
 
     public String getIsbn() { return isbn; }
     public void setIsbn(String isbn) { this.isbn = isbn; }
+    
+    public String getCoverUrl() { return coverUrl; }
+    public void setCoverUrl(String coverUrl) { this.coverUrl = coverUrl; }
 
-    // ==== ALIAS để không phải sửa controller cũ ====
-// Ẩn khỏi JSON output để không trùng field
-@JsonIgnore
-public String getBookName() { return getName(); }
-public void setBookName(String v) { setName(v); }
+    // ==== ALIAS (Giữ nguyên) ====
+    @JsonIgnore
+    public String getBookName() { return getName(); }
+    public void setBookName(String v) { setName(v); }
 
-@JsonIgnore
-public String getBookAuthor() { return getAuthor(); }
-public void setBookAuthor(String v) { setAuthor(v); }
-
-@JsonIgnore
-public String getBookGenre() { return getGenre(); }
-public void setBookGenre(String v) { setGenre(v); }
-
-// số lượng bản sao
-@JsonIgnore
-public Integer getNoOfCopies() { return getNumberOfCopiesAvailable(); }
-public void setNoOfCopies(Integer v) { setNumberOfCopiesAvailable(v); }
+    @JsonIgnore
+    public Integer getNoOfCopies() { return getNumberOfCopiesAvailable(); }
+    public void setNoOfCopies(Integer v) { setNumberOfCopiesAvailable(v); }
 
 
-    // ===== business helpers =====
+    // ===== business helpers (Giữ nguyên) =====
     public void borrowBook() {
         if (numberOfCopiesAvailable == null) numberOfCopiesAvailable = 0;
         if (numberOfCopiesAvailable <= 0) throw new IllegalStateException("No copies available");
@@ -88,11 +98,4 @@ public void setNoOfCopies(Integer v) { setNumberOfCopiesAvailable(v); }
         if (numberOfCopiesAvailable == null) numberOfCopiesAvailable = 0;
         numberOfCopiesAvailable++;
     }
-
-    @Column(name = "cover_url", length = 512)
-    private String coverUrl;
-
-    // --- BỔ SUNG GETTERS/SETTERS CHO NÓ ---
-    public String getCoverUrl() { return coverUrl; }
-    public void setCoverUrl(String coverUrl) { this.coverUrl = coverUrl; }
 }

@@ -64,8 +64,12 @@
         <td>
           <a [routerLink]="['/books', book.id]" class="book-title-link">{{ book.name }}</a>
         </td>
-        <td>{{ book.author }}</td>
-        <td>{{ book.genre }}</td>
+        <td>
+          <span *ngFor="let a of book.authors; let last = last">{{ a.name }}{{ !last ? ', ' : '' }}</span>
+        </td>
+        <td>
+          <span *ngFor="let c of book.categories; let last = last">{{ c.name }}{{ !last ? ', ' : '' }}</span>
+        </td>
         <td>{{ book.publishedYear || '-' }}</td>
         <td>{{ book.isbn || '-' }}</td>
         <td [class.text-danger]="book.numberOfCopiesAvailable === 0">{{ book.numberOfCopiesAvailable }}</td>

@@ -1,0 +1,55 @@
+<div class="chatbot-container" *ngIf="isUser; else notLoggedIn">
+  <button class="chat-fab" (click)="toggleChat()" title="Toggle chat">
+    <i class="fas fa-robot"></i>
+  </button>
+
+  <div class="chat-window" [class.open]="isOpen">
+    <div class="chat-header">
+      <div class="header-title">
+        <h5>Library Assistant 📚</h5>
+        <small>Powered by AI & RAG</small>
+      </div>
+      <div class="header-actions">
+        <button class="btn-action" (click)="clearChat()" title="Clear chat" *ngIf="messages.length > 1">
+          <i class="fas fa-trash-alt"></i>
+        </button>
+        <button class="btn-close" (click)="toggleChat()"></button>
+      </div>
+    </div>
+
+    <div class="chat-body" #chatBody>
+      <div *ngFor="let message of messages" class="message" [ngClass]="message.author">
+        <div class="message-content">
+          <p [innerHTML]="message.text"></p>
+          <small class="timestamp" *ngIf="message.timestamp">
+            {{ message.timestamp | date:'short' }}
+          </small>
+        </div>
+      </div>
+      <div *ngIf="isLoading" class="message bot">
+        <div class="typing-indicator">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="chat-footer">
+      <form (ngSubmit)="sendMessage()">
+        <input 
+          type="text" 
+          [(ngModel)]="currentMessage" 
+          name="currentMessage" 
+          placeholder="Ask about books, authors, genres..." 
+          [disabled]="isLoading"
+          autocomplete="off">
+        <button type="submit" [disabled]="isLoading || !currentMessage.trim()">
+          <i class="fas fa-paper-plane"></i>
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<ng-template #notLoggedIn></ng-template>

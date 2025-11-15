@@ -74,7 +74,13 @@
               <thead><tr><th>ID</th><th>Tên</th><th>Tác Giả</th><th>Số Lượng</th></tr></thead>
               <tbody>
                 <tr *ngFor="let book of allBooks">
-                  <td>{{ book.id }}</td><td>{{ book.name }}</td><td>{{ book.author }}</td><td>{{ book.numberOfCopiesAvailable }}</td>
+                  <td>{{ book.id }}</td>
+                  <td>{{ book.name }}</td>
+                  <td>
+                    <span *ngIf="book.authors && book.authors.length > 0">{{ book.authors[0].name }}</span>
+                    <span *ngIf="!book.authors || book.authors.length === 0">-</span>
+                  </td>
+                  <td>{{ book.numberOfCopiesAvailable }}</td>
                 </tr>
               </tbody>
             </table>
@@ -129,11 +135,11 @@
                     <table class="table table-sm table-hover">
                         <thead><tr><th>Tên Sách</th><th>Tên Người Mượn</th><th>Ngày Hết Hạn</th></tr></thead>
                         <tbody>
-                            <tr *ngFor="let loan of allLoans">
+                            <ng-container *ngFor="let loan of allLoans">
                                 <tr *ngIf="loan.status === 'OVERDUE'">
                                     <td>{{ loan.bookName }}</td><td>{{ loan.userName }}</td><td>{{ loan.dueDate | date:'dd/MM/yyyy' }}</td>
                                 </tr>
-
+                            </ng-container>
                         </tbody>
                     </table>
                 </div>

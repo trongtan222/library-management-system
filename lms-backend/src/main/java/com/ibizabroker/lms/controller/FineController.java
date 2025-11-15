@@ -14,7 +14,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @CrossOrigin(origins = "http://localhost:4200")
-@RequestMapping("/admin/fines") // <-- THAY ĐỔI
+@RequestMapping("/api/admin/fines") // <-- THAY ĐỔI
 public class FineController {
 
     private final LoanRepository loanRepository;

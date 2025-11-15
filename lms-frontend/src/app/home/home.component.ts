@@ -8,9 +8,10 @@ import { Observable, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 
 @Component({
-  selector: 'app-home',
-  templateUrl: './home.component.html',
-  styleUrls: ['./home.component.css']
+    selector: 'app-home',
+    templateUrl: './home.component.html',
+    styleUrls: ['./home.component.css'],
+    standalone: false
 })
 export class HomeComponent implements OnInit {
 
@@ -35,16 +36,18 @@ export class HomeComponent implements OnInit {
 
   ngOnInit(): void {
     this.newestBooks$ = this.booksService.getNewestBooks().pipe(
+      // SỬA LỖI TRONG KHỐI MAP NÀY
       map((data: any[]) => (data || []).map(b => ({
           id: b.id,
           name: b.name,
-          author: b.author,
-          genre: b.genre,
+          authors: b.authors || [], // Sửa từ author
+          categories: b.categories || [], // Sửa từ genre
           publishedYear: b.publishedYear,
           isbn: b.isbn,
-          numberOfCopiesAvailable: b.numberOfCopiesAvailable
-        }))
-      ),
+          numberOfCopiesAvailable: b.numberOfCopiesAvailable,
+          coverUrl: b.coverUrl // Thêm coverUrl (nếu model Books có)
+        } as Books) // Ép kiểu về Books
+      )),
       catchError((err: HttpErrorResponse) => {
         console.error("Could not load newest books", err);
         return of([]);

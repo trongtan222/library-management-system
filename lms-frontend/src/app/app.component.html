@@ -1,6 +1,5 @@
 <app-header></app-header>
 
-<!-- Home: KHÔNG container; Các trang khác: có container như cũ -->
 <ng-container *ngIf="isHomeRoute; else normalLayout">
   <main class="main-shell">
     <router-outlet></router-outlet>
@@ -12,3 +11,5 @@
     <router-outlet></router-outlet>
   </main>
 </ng-template>
+
+<app-chatbot></app-chatbot>

@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
-import { Books } from '../models/books';
+import { Books, Author, Category } from '../models/books'; // Import thêm Author, Category
 import { BooksService } from '../services/books.service';
 import { UserAuthService } from '../services/user-auth.service';
 import { finalize } from 'rxjs/operators';
@@ -9,9 +9,10 @@ import { ReviewService, BookReviewsSummary, Review } from '../services/review.se
 import { ToastrService } from 'ngx-toastr';
 
 @Component({
-  selector: 'app-book-details',
-  templateUrl: './book-details.component.html',
-  styleUrls: ['./book-details.component.css']
+    selector: 'app-book-details',
+    templateUrl: './book-details.component.html',
+    styleUrls: ['./book-details.component.css'],
+    standalone: false
 })
 export class BookDetailsComponent implements OnInit {
 
@@ -19,10 +20,10 @@ export class BookDetailsComponent implements OnInit {
   isLoading = true;
   errorMessage = '';
   isUser = false;
-  private readonly googleApiKey = 'AIzaSyB2Yrs1oWkbIirD3BmF2lOM7bIE9d3Zn40';
+  private readonly googleApiKey = 'AIzaSyB2Yrs1oWkbIirD3BmF2lOM7bIE9d3Zn40'; // (Lưu ý: API key không nên để public)
   reviewsSummary: BookReviewsSummary | null = null;
   userCanReview = false;
-  isCheckingPermission = true; // Biến trạng thái mới để quản lý việc kiểm tra quyền
+  isCheckingPermission = true; 
   newReview = { rating: 5, comment: '' };
 
   constructor(
@@ -55,12 +56,13 @@ export class BookDetailsComponent implements OnInit {
     this.booksService.getBookById(id)
       .pipe(finalize(() => this.isLoading = false))
       .subscribe({
-        next: (data: any) => {
+        next: (data: Books) => { // data đã là kiểu Books
+          // SỬA LỖI TRONG KHỐI NÀY
           this.book = {
             id: data.id,
             name: data.name,
-            author: data.author,
-            genre: data.genre,
+            authors: data.authors || [], // Sửa từ author
+            categories: data.categories || [], // Sửa từ genre
             publishedYear: data.publishedYear,
             isbn: data.isbn,
             numberOfCopiesAvailable: data.numberOfCopiesAvailable,
@@ -137,7 +139,9 @@ export class BookDetailsComponent implements OnInit {
 
   private searchByTitleAndAuthor(book: Books): void {
     const title = encodeURIComponent(book.name);
-    const author = encodeURIComponent(book.author);
+    // SỬA LỖI Ở ĐÂY: Lấy tên tác giả đầu tiên (nếu có)
+    const authorName = book.authors && book.authors.length > 0 ? book.authors[0].name : '';
+    const author = encodeURIComponent(authorName);
     const url = `https://www.googleapis.com/books/v1/volumes?q=intitle:${title}+inauthor:${author}&key=${this.googleApiKey}`;
     
     this.http.get<any>(url).subscribe({

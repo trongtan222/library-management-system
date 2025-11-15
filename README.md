@@ -158,6 +158,36 @@ spring.datasource.password = yourPassword
 ```
 
 # Development
+## Requirements
+- **Java 21 (LTS)**: The backend requires JDK 21. Ensure `java -version` shows Java 21 before building.
+
+Windows (recommended) quick install examples:
+
+- Using `winget` (if available):
+
+```powershell
+winget install --id EclipseAdoptium.Temurin.21.JDK -e
+```
+
+- If `winget` is not available, download the Temurin (Adoptium) JDK 21 installer from:
+    https://adoptium.net/releases.html and run the installer.
+
+- After installation, set `JAVA_HOME` and update `PATH` (PowerShell example for current session):
+
+```powershell
+$env:JAVA_HOME = 'C:\Program Files\Eclipse Adoptium\jdk-21'
+$env:Path = "$env:JAVA_HOME\bin;" + $env:Path
+java -version
+```
+
+To persist `JAVA_HOME` for all sessions use `setx` (requires a new shell to pick up):
+
+```powershell
+setx JAVA_HOME "C:\Program Files\Eclipse Adoptium\jdk-21" /M
+```
+
+Note: This project enforces Java 21 via Maven enforcer. If you attempt to build with a different Java version, the build will fail.
+
 * Frontend
 ```
 npm install

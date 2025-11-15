@@ -1,6 +1,6 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
-import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
+import { HTTP_INTERCEPTORS, provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { BooksListComponent } from './books-list/books-list.component';
@@ -20,6 +20,8 @@ import { UsersService } from './services/users.service';
 import { RouterModule } from '@angular/router';
 import { AuthGuard } from './auth/auth.guard';
 import { AuthInterceptor } from './auth/auth.interceptor';
+import { ErrorInterceptor } from './auth/error.interceptor';
+import { LoadingInterceptor } from './auth/loading.interceptor';
 import { ForbiddenComponent } from './forbidden/forbidden.component';
 import { BorrowBookComponent } from './borrow-book/borrow-book.component';
 import { ReturnBookComponent } from './return-book/return-book.component';
@@ -34,60 +36,65 @@ import { CommonModule } from '@angular/common';
 import { ToastrModule } from 'ngx-toastr';
 import { ManageReviewsComponent } from './admin/manage-reviews/manage-reviews.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { CreateUserComponent } from './create-user/create-user.component'; // <-- THÊM IMPORT
+import { CreateUserComponent } from './create-user/create-user.component';
+import { ChatbotComponent } from './chatbot/chatbot.component';
 
-@NgModule({
-  declarations: [
-    AppComponent,
-    BooksListComponent,
-    CreateBookComponent,
-    UpdateBookComponent,
-    BookDetailsComponent,
-    UsersListComponent,
-    UserDetailsComponent,
-    UpdateUserComponent,
-    LoginComponent,
-    LogoutComponent,
-    HeaderComponent,
-    HomeComponent,
-    ForbiddenComponent,
-    BorrowBookComponent,
-    ReturnBookComponent,
-    SignupComponent,
-    DashboardComponent,
-    LoanManagementComponent,
-    MyAccountComponent,
-    ManageFinesComponent,
-    ReportsComponent,
-    ManageReviewsComponent,
-    CreateUserComponent // <-- THÊM VÀO DECLARATIONS
-  ],
-  imports: [
-    BrowserModule,
-    AppRoutingModule,
-    HttpClientModule,
-    FormsModule,
-    RouterModule,
-    BrowserAnimationsModule,
-    CommonModule,
-    ToastrModule.forRoot({
-      timeOut: 3000,
-      positionClass: 'toast-bottom-right',
-      preventDuplicates: true,
-    }),
-    
-  ],
-  providers: [
-    AuthGuard,
-    {
-      provide: HTTP_INTERCEPTORS,
-      useClass: AuthInterceptor,
-      multi: true
-    },
-    UsersService,
-    BooksService,
-    UserAuthService
-  ],
-  bootstrap: [AppComponent]
-})
+@NgModule({ declarations: [
+        AppComponent,
+        BooksListComponent,
+        CreateBookComponent,
+        UpdateBookComponent,
+        BookDetailsComponent,
+        UsersListComponent,
+        UserDetailsComponent,
+        UpdateUserComponent,
+        LoginComponent,
+        LogoutComponent,
+        HeaderComponent,
+        HomeComponent,
+        ForbiddenComponent,
+        BorrowBookComponent,
+        ReturnBookComponent,
+        SignupComponent,
+        DashboardComponent,
+        LoanManagementComponent,
+        MyAccountComponent,
+        ManageFinesComponent,
+        ReportsComponent,
+        ManageReviewsComponent,
+        CreateUserComponent,
+        ChatbotComponent
+    ],
+    bootstrap: [AppComponent], imports: [BrowserModule,
+        AppRoutingModule,
+        FormsModule,
+        RouterModule,
+        BrowserAnimationsModule,
+        CommonModule,
+        ToastrModule.forRoot({
+            timeOut: 3000,
+            positionClass: 'toast-bottom-right',
+            preventDuplicates: true,
+        })], providers: [
+        AuthGuard,
+        {
+            provide: HTTP_INTERCEPTORS,
+            useClass: AuthInterceptor,
+            multi: true
+        },
+        {
+            provide: HTTP_INTERCEPTORS,
+            useClass: ErrorInterceptor,
+            multi: true
+        },
+        {
+            provide: HTTP_INTERCEPTORS,
+            useClass: LoadingInterceptor,
+            multi: true
+        },
+        UsersService,
+        BooksService,
+        UserAuthService,
+        provideHttpClient(withInterceptorsFromDi())
+    ] })
 export class AppModule { }

@@ -5,6 +5,17 @@
       <label class="form-label">Tên</label>
       <input type="text" class="form-control" [(ngModel)]="user.name" name="name" required>
     </div>
+
+    <div class="form-group mb-3">
+      <label class="form-label">Email</label>
+      <input type="email" class="form-control" [(ngModel)]="user.email" name="email" required email #email="ngModel"
+             [class.is-invalid]="email.invalid && email.touched">
+      <div *ngIf="email.invalid && email.touched" class="invalid-feedback">
+        <span *ngIf="email.errors?.['required']">Vui lòng nhập email.</span>
+        <span *ngIf="email.errors?.['email']">Vui lòng nhập một địa chỉ email hợp lệ.</span>
+      </div>
+    </div>
+
     <div class="form-group mb-3">
       <label class="form-label">Tên Đăng Nhập</label>
       <input type="text" class="form-control" [(ngModel)]="user.username" name="username" required>

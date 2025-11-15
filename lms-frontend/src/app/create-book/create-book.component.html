@@ -15,27 +15,34 @@
       </div>
       
       <div class="mb-3">
-        <label for="author" class="form-label">Tác Giả</label>
-        <input type="text" class="form-control" id="author" name="author" 
-               [(ngModel)]="book.author" required #author="ngModel">
-        <div *ngIf="author.invalid && (author.dirty || author.touched)" class="text-danger mt-1">
-          Tác giả là bắt buộc.
+        <label for="authorIds" class="form-label">Tác Giả</label>
+        <select multiple class="form-select" id="authorIds" name="authorIds"
+                [(ngModel)]="book.authorIds" required #authorIds="ngModel" [size]="5">
+          <option *ngFor="let author of allAuthors" [ngValue]="author.id">
+            {{ author.name }}
+          </option>
+        </select>
+        <div *ngIf="authorIds.invalid && (authorIds.dirty || authorIds.touched)" class="text-danger mt-1">
+          Vui lòng chọn ít nhất 1 tác giả.
         </div>
       </div>
 
       <div class="mb-3">
-        <label for="genre" class="form-label">Thể Loại</label>
-        <input type="text" class="form-control" id="genre" name="genre" 
-               [(ngModel)]="book.genre" required #genre="ngModel">
-        <div *ngIf="genre.invalid && (genre.dirty || genre.touched)" class="text-danger mt-1">
-          Thể loại là bắt buộc.
+        <label for="categoryIds" class="form-label">Thể Loại</label>
+        <select multiple class="form-select" id="categoryIds" name="categoryIds"
+                [(ngModel)]="book.categoryIds" required #categoryIds="ngModel" [size]="5">
+          <option *ngFor="let category of allCategories" [ngValue]="category.id">
+            {{ category.name }}
+          </option>
+        </select>
+        <div *ngIf="categoryIds.invalid && (categoryIds.dirty || categoryIds.touched)" class="text-danger mt-1">
+          Vui lòng chọn ít nhất 1 thể loại.
         </div>
       </div>
 
       <div class="row">
         <div class="col-md-6 mb-3">
-          <label for="noOfCopies" class="form-label">Số Lượng Bản Sao</label>
-          <!-- SỬA LỖI Ở ĐÂY -->
+          <label for="numberOfCopiesAvailable" class="form-label">Số Lượng Bản Sao</label>
           <input type="number" class="form-control" id="numberOfCopiesAvailable" name="numberOfCopiesAvailable" 
                  [(ngModel)]="book.numberOfCopiesAvailable" required min="0" #noOfCopies="ngModel">
           <div *ngIf="noOfCopies.invalid && (noOfCopies.dirty || noOfCopies.touched)" class="text-danger mt-1">

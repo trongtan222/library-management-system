@@ -1,14 +1,15 @@
 import { Component, OnInit } from '@angular/core';
 import { AdminService, DashboardDetails, LoanDetails } from '../../services/admin.service';
-import { BooksService } from '../../services/books.service';
+import { BooksService } from '../../services/books.service'; // Đã import
 import { UsersService } from '../../services/users.service';
 import { Books } from '../../models/books';
 import { Users } from '../../models/users';
 
 @Component({
-  selector: 'app-dashboard',
-  templateUrl: './dashboard.component.html',
-  styleUrls: ['./dashboard.component.css']
+    selector: 'app-dashboard',
+    templateUrl: './dashboard.component.html',
+    styleUrls: ['./dashboard.component.css'],
+    standalone: false
 })
 export class DashboardComponent implements OnInit {
 
@@ -53,7 +54,7 @@ export class DashboardComponent implements OnInit {
     } else {
       this.activeView = view;
       // Tải dữ liệu nếu cần
-      if (view === 'books' && this.allBooks.length === 0) this.loadAllBooks();
+      if (view === 'books' && this.allBooks.length === 0) this.loadAllBooks(); // Sửa ở đây
       if (view === 'users' && this.allUsers.length === 0) this.loadAllUsers();
       if ((view === 'activeLoans' || view === 'overdueLoans') && this.allLoans.length === 0) {
         this.loadAllLoans();
@@ -61,9 +62,16 @@ export class DashboardComponent implements OnInit {
     }
   }
 
-  // Các hàm tải dữ liệu chi tiết
+  // SỬA LỖI TRONG HÀM NÀY
   loadAllBooks(): void {
-    this.booksService.getBooksList().subscribe((data: Books[]) => this.allBooks = data);
+    // Thay vì gọi getBooksList(), gọi getPublicBooks
+    // (Lấy 1000 cuốn sách, không cần phân trang cho dashboard)
+    this.booksService.getPublicBooks(false, null, null, 0, 1000).subscribe({
+      next: (page) => {
+        this.allBooks = page.content;
+      },
+      error: (err) => this.handleError(err)
+    });
   }
 
   loadAllUsers(): void {
