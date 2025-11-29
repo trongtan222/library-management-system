@@ -1,0 +1,16 @@
+/* Tùy chỉnh màu placeholder cho input tối */
+::placeholder {
+  color: #6c757d !important;
+  opacity: 1;
+}
+
+/* Hover effect cho list item */
+.list-group-item-action:hover {
+  background-color: #2c3034 !important;
+  cursor: pointer;
+}
+
+.selected-card {
+  transition: all 0.3s ease;
+  background-color: #1a1e21; /* Nền tối nhẹ cho thẻ đã chọn */
+}

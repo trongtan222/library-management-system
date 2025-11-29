@@ -20,6 +20,10 @@ import { MyAccountComponent } from './my-account/my-account.component';
 import { ManageFinesComponent } from './admin/manage-fines/manage-fines.component';
 import { ManageReviewsComponent } from './admin/manage-reviews/manage-reviews.component';
 import { CreateUserComponent } from './create-user/create-user.component'; // <-- THÊM IMPORT
+import { LogoutComponent } from './logout/logout.component';
+import { CreateLoanComponent } from './admin/create-loan/create-loan.component';
+import { WishlistComponent } from './wishlist/wishlist.component';
+import { AdminScannerComponent } from './admin/admin-scanner/admin-scanner.component';
 
 const routes: Routes = [
   // ADMIN pages
@@ -35,17 +39,21 @@ const routes: Routes = [
   { path: 'admin/loans', component: LoanManagementComponent, canActivate: [AuthGuard], data: { roles: ['Admin'] } },
   { path: 'admin/fines', component: ManageFinesComponent, canActivate: [AuthGuard], data: { roles: ['Admin'] } },
   { path: 'admin/reviews', component: ManageReviewsComponent, canActivate: [AuthGuard], data: { roles: ['Admin'] } },
-  
+  { path: 'admin/create-loan', component: CreateLoanComponent, canActivate: [AuthGuard], data: { roles: ['Admin'] } },
+  { path: 'admin/scanner', component: AdminScannerComponent, canActivate: [AuthGuard], data: { roles: ['Admin'] } },
+
 
   // USER pages
   { path: 'borrow-book', component: BorrowBookComponent, canActivate: [AuthGuard], data: { roles: ['User'] } },
   { path: 'return-book', component: ReturnBookComponent, canActivate: [AuthGuard], data: { roles: ['User'] } },
   { path: 'books/:id', component: BookDetailsComponent, canActivate: [AuthGuard], data: { roles: ['User', 'Admin'] } },
   { path: 'my-account', component: MyAccountComponent, canActivate: [AuthGuard], data: { roles: ['User'] } },
+  { path: 'wishlist', component: WishlistComponent, canActivate: [AuthGuard], data: { roles: ['User'] } },
 
   // public
   { path: 'register', component: SignupComponent },
   { path: 'login', component: LoginComponent },
+  { path: 'logout', component: LogoutComponent },
   { path: 'forbidden', component: ForbiddenComponent },
   { path: '', component: HomeComponent },
 ];

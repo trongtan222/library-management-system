@@ -38,63 +38,76 @@ import { ManageReviewsComponent } from './admin/manage-reviews/manage-reviews.co
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { CreateUserComponent } from './create-user/create-user.component';
 import { ChatbotComponent } from './chatbot/chatbot.component';
+import { CreateLoanComponent } from './admin/create-loan/create-loan.component'; // Import
+// Import thư viện QR và Scanner
+import { ZXingScannerModule } from '@zxing/ngx-scanner';
+import { QRCodeComponent } from 'angularx-qrcode';
 
-@NgModule({ declarations: [
-        AppComponent,
-        BooksListComponent,
-        CreateBookComponent,
-        UpdateBookComponent,
-        BookDetailsComponent,
-        UsersListComponent,
-        UserDetailsComponent,
-        UpdateUserComponent,
-        LoginComponent,
-        LogoutComponent,
-        HeaderComponent,
-        HomeComponent,
-        ForbiddenComponent,
-        BorrowBookComponent,
-        ReturnBookComponent,
-        SignupComponent,
-        DashboardComponent,
-        LoanManagementComponent,
-        MyAccountComponent,
-        ManageFinesComponent,
-        ReportsComponent,
-        ManageReviewsComponent,
-        CreateUserComponent,
-        ChatbotComponent
-    ],
-    bootstrap: [AppComponent], imports: [BrowserModule,
-        AppRoutingModule,
-        FormsModule,
-        RouterModule,
-        BrowserAnimationsModule,
-        CommonModule,
-        ToastrModule.forRoot({
-            timeOut: 3000,
-            positionClass: 'toast-bottom-right',
-            preventDuplicates: true,
-        })], providers: [
-        AuthGuard,
-        {
-            provide: HTTP_INTERCEPTORS,
-            useClass: AuthInterceptor,
-            multi: true
-        },
-        {
-            provide: HTTP_INTERCEPTORS,
-            useClass: ErrorInterceptor,
-            multi: true
-        },
-        {
-            provide: HTTP_INTERCEPTORS,
-            useClass: LoadingInterceptor,
-            multi: true
-        },
-        UsersService,
-        BooksService,
-        UserAuthService,
-        provideHttpClient(withInterceptorsFromDi())
-    ] })
+@NgModule({
+  declarations: [
+    AppComponent,
+    BooksListComponent,
+    CreateBookComponent,
+    UpdateBookComponent,
+    BookDetailsComponent,
+    UsersListComponent,
+    UserDetailsComponent,
+    UpdateUserComponent,
+    LoginComponent,
+    LogoutComponent,
+    HeaderComponent,
+    HomeComponent,
+    ForbiddenComponent,
+    BorrowBookComponent,
+    ReturnBookComponent,
+    SignupComponent,
+    DashboardComponent,
+    LoanManagementComponent,
+    MyAccountComponent,
+    ManageFinesComponent,
+    ReportsComponent,
+    ManageReviewsComponent,
+    CreateUserComponent,
+    CreateLoanComponent,
+    ChatbotComponent,
+  ],
+  imports: [
+    BrowserModule,
+    AppRoutingModule,
+    FormsModule,
+    RouterModule,
+    BrowserAnimationsModule,
+    CommonModule,
+    ToastrModule.forRoot({
+      timeOut: 3000,
+      positionClass: 'toast-bottom-right',
+      preventDuplicates: true,
+    }),
+    ZXingScannerModule,
+    QRCodeComponent
+  ],
+  providers: [
+    AuthGuard,
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: AuthInterceptor,
+      multi: true
+    },
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: ErrorInterceptor,
+      multi: true
+    },
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: LoadingInterceptor,
+      multi: true
+    },
+    UsersService,
+    BooksService,
+    UserAuthService,
+    provideHttpClient(withInterceptorsFromDi())
+  ],
+  bootstrap: [AppComponent]
+})
 export class AppModule { }

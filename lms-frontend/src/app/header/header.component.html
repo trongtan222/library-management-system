@@ -2,7 +2,7 @@
   <div class="container-fluid">
     <a class="navbar-brand" routerLink="/">
       <i class="fa-solid fa-book-atlas"></i>
-      LMS
+      THCS Phương Tú
     </a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent">
       <span class="navbar-toggler-icon"></span>
@@ -10,7 +10,6 @@
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
       <ul class="navbar-nav me-auto mb-2 mb-lg-0">
 
-        <!-- Admin Links -->
         <li class="nav-item" *ngIf="isAdmin()">
           <a class="nav-link" routerLink="/admin/dashboard" routerLinkActive="active">
             <i class="fa-solid fa-chart-pie"></i> Bảng Điều Khiển
@@ -26,13 +25,25 @@
             <li><a class="dropdown-item" routerLink="/admin/loans" routerLinkActive="active"><i class="fa-solid fa-exchange-alt"></i> Mượn/Trả</a></li>
             <li><a class="dropdown-item" routerLink="/admin/fines" routerLinkActive="active"><i class="fa-solid fa-file-invoice-dollar"></i> Phí Phạt</a></li>
             <li><a class="dropdown-item" routerLink="/admin/reviews" routerLinkActive="active"><i class="fa-solid fa-star-half-alt"></i> Đánh Giá</a></li>
+            <li><a class="dropdown-item" routerLink="/admin/scanner" routerLinkActive="active"><i class="fa-solid fa-qrcode"></i> Quét Mã</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li>
+              <a class="dropdown-item" routerLink="/admin/create-loan" routerLinkActive="active">
+                <i class="fa-solid fa-file-signature text-warning"></i> Tạo Phiếu Mượn
+              </a>
+            </li>
           </ul>
         </li>
 
-        <!-- User Links -->
         <li class="nav-item" *ngIf="isUser()">
           <a class="nav-link" routerLink="/borrow-book" routerLinkActive="active">
             <i class="fa-solid fa-hand-holding-hand"></i> Mượn Sách
+          </a>
+        </li>
+
+        <li class="nav-item" *ngIf="isUser()">
+          <a class="nav-link" routerLink="/wishlist" routerLinkActive="active">
+            <i class="fa-solid fa-heart text-danger"></i> Danh Sách Yêu Thích
           </a>
         </li>
         <li class="nav-item" *ngIf="isUser()">

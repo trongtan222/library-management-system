@@ -15,7 +15,6 @@ class JwtUtilTest {
     @Test
     void testGenerateAndValidateToken() {
         // Set up
-        // ⭐ SỬA LẠI: Dùng setters thay vì truy cập trực tiếp
         jwtUtil.setSecret("my-very-secret-key-that-is-at-least-32-bytes-long");
         jwtUtil.setExpirationMs(3600000); // 1 hour
 
@@ -34,7 +33,6 @@ class JwtUtilTest {
     @Test
     void testExpiredToken() throws InterruptedException {
         // Set up
-        // ⭐ SỬA LẠI: Dùng setters thay vì truy cập trực tiếp
         jwtUtil.setSecret("my-very-secret-key-that-is-at-least-32-bytes-long");
         jwtUtil.setExpirationMs(1); // 1 millisecond
 

@@ -42,11 +42,8 @@ public class ChatbotController {
     @PostMapping
     // ⭐ Đã bỏ 'Mono'
     public ResponseEntity<String> ask(@Valid @RequestBody ChatRequestDto chatRequest) {
-
-        // ⭐ Lấy Authentication đồng bộ
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-
-        logAuthenticationDetails(auth); // Log authentication details
+        logAuthenticationDetails(auth);
 
         String conversationId = chatRequest.getConversationId() != null ?
                 chatRequest.getConversationId() :
@@ -54,20 +51,18 @@ public class ChatbotController {
 
         Integer userId = extractUserId(auth);
 
-        // Logic xây dựng prompt giữ nguyên
-        String augmentedPrompt = ragService.buildAugmentedPrompt(chatRequest.getPrompt());
-
-        if (chatRequest.getConversationId() != null) {
-            augmentedPrompt = conversationService.buildContextAwarePrompt(
-                    chatRequest.getPrompt(),
-                    conversationId
-            ) + "\n\n=== LIBRARY CONTEXT ===\n" +
-                    ragService.retrieveContext(chatRequest.getPrompt());
+        // Check Redis cache for conversation history
+        String history = conversationService.getHistoryFromCache(conversationId);
+        if (history == null) {
+            history = conversationService.buildConversationContext(conversationId);
+            conversationService.saveHistoryToCache(conversationId, history);
         }
 
-        // URL model mới của bạn
-        String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
+        // Build context-aware prompt
+        String augmentedPrompt = history + "\nUser: " + chatRequest.getPrompt();
 
+        // Call AI service (existing logic)
+        String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
         var payload = Map.of(
                 "contents", new Object[]{
                         Map.of(
@@ -78,27 +73,8 @@ public class ChatbotController {
                 }
         );
 
-        // Logic mock API key giữ nguyên
-        if (apiKey == null || apiKey.trim().isEmpty() || apiKey.toLowerCase().contains("your-")) {
-            String mockText = "The chatbot is running in local mode because the Generative API key is not configured or appears invalid.";
-            String mockJson = "{\"mock\":true, \"message\": \"" + mockText.replace("\"", "\\\"") + "\"}";
-
-            try {
-                conversationService.saveMessage(conversationId, userId, chatRequest.getPrompt(), mockJson);
-            } catch (Exception ex) {
-                logger.warn("Failed to save mocked chatbot message: " + ex.getMessage());
-            }
-
-            return ResponseEntity.ok()
-                    .header("X-Conversation-Id", conversationId)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(mockJson);
-        }
-
-        // ⭐ Sử dụng RestTemplate đồng bộ
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-
         String bearerToken = null;
         if (serviceAccountPath != null && !serviceAccountPath.isBlank()) {
             try (FileInputStream fis = new FileInputStream(serviceAccountPath)) {
@@ -119,9 +95,8 @@ public class ChatbotController {
             finalUrl = url + "?key=" + apiKey;
         }
 
-HttpEntity<?> requestEntity = new HttpEntity<>(payload, headers);
+        HttpEntity<?> requestEntity = new HttpEntity<>(payload, headers);
         try {
-            // ⭐ Đây là cuộc gọi API đồng bộ
             ResponseEntity<String> geminiResponse = restTemplate.exchange(
                     finalUrl,
                     HttpMethod.POST,
@@ -131,15 +106,10 @@ HttpEntity<?> requestEntity = new HttpEntity<>(payload, headers);
 
             String geminiJsonResponse = geminiResponse.getBody();
 
-            // Lưu message (giữ nguyên)
-            conversationService.saveMessage(
-                    conversationId,
-                    userId,
-                    chatRequest.getPrompt(),
-                    geminiJsonResponse
-            );
+            // Save message and update Redis cache
+            conversationService.saveMessage(conversationId, userId, chatRequest.getPrompt(), geminiJsonResponse);
+            conversationService.saveHistoryToCache(conversationId, history + "\nUser: " + chatRequest.getPrompt() + "\nAssistant: " + geminiJsonResponse);
 
-            // Trả về response (giữ nguyên)
             return ResponseEntity.ok()
                     .header("X-Conversation-Id", conversationId)
                     .contentType(MediaType.APPLICATION_JSON)
@@ -149,17 +119,6 @@ HttpEntity<?> requestEntity = new HttpEntity<>(payload, headers);
             String errorMsg = handleApiError(e);
             logger.error("Chatbot API error: ", e);
             String errorJson = "{\"error\": \"" + errorMsg.replace("\"", "\\\"") + "\"}";
-
-            // ✅ ĐÃ SỬA
-            if (e instanceof HttpStatusCodeException) {
-                HttpStatusCodeException we = (HttpStatusCodeException) e;
-                if (we.getStatusCode().value() == 401) {
-                    return ResponseEntity.status(502) // Bad Gateway
-                            .header("X-Conversation-Id", conversationId)
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .body(errorJson);
-                }
-            }
 
             return ResponseEntity.status(500)
                     .header("X-Conversation-Id", conversationId)

@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpParams, HttpContext } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Books } from '../models/books';
-import { environment } from 'src/environments/environment';
+import { Book, Author, Category } from '../models/book';
+import { ApiService, IS_PUBLIC_API } from './api.service';
 
 export interface Page<T> {
   content: T[];
@@ -12,26 +12,17 @@ export interface Page<T> {
   size: number;
 }
 
-// THÊM 2 INTERFACE NÀY
-export interface Author {
-  id: number;
-  name: string;
-}
-export interface Category {
-  id: number;
-  name: string;
-}
-
 @Injectable({
   providedIn: 'root'
 })
 export class BooksService {
-  private API_URL = environment.apiBaseUrl;
-  // environment.apiBaseUrl already includes /api
-  private ADMIN_URL = `${this.API_URL}/admin/books`;
-  private PUBLIC_URL = `${this.API_URL}/public/books`;
+  
+  constructor(
+    private http: HttpClient,
+    private apiService: ApiService
+  ) { }
 
-  constructor(private httpClient: HttpClient) { }
+  // --- PUBLIC METHODS ---
 
   public getPublicBooks(
     availableOnly: boolean,
@@ -39,57 +30,53 @@ export class BooksService {
     genre?: string | null,
     page: number = 0,
     size: number = 10
-  ): Observable<Page<Books>> {
+  ): Observable<Page<Book>> {
     let params = new HttpParams()
       .set('availableOnly', availableOnly.toString())
       .set('page', page.toString())
       .set('size', size.toString());
 
-    if (search) {
-      params = params.set('search', search);
-    }
-    if (genre) {
-      params = params.set('genre', genre);
-    }
+    if (search) params = params.set('search', search);
+    if (genre) params = params.set('genre', genre);
 
-    return this.httpClient.get<Page<Books>>(this.PUBLIC_URL, { params });
+    // Sử dụng context để báo cho Interceptor biết đây là public API
+    return this.http.get<Page<Book>>(this.apiService.buildUrl('/public/books'), {
+      params,
+      context: new HttpContext().set(IS_PUBLIC_API, true)
+    });
   }
 
-  public getAllBooksForGenres(): Observable<Books[]> {
-    return this.httpClient.get<Books[]>(this.PUBLIC_URL);
+  public getBookById(id: number): Observable<Book> {
+    return this.http.get<Book>(this.apiService.buildUrl(`/public/books/${id}`), {
+      context: new HttpContext().set(IS_PUBLIC_API, true)
+    });
   }
 
-  public getBookById(id: number): Observable<Books> {
-    return this.httpClient.get<Books>(`${this.PUBLIC_URL}/${id}`);
-  }
-
-  public getNewestBooks(): Observable<Books[]> {
-    return this.httpClient.get<Books[]>(`${this.PUBLIC_URL}/newest`);
+  public getNewestBooks(): Observable<Book[]> {
+    return this.http.get<Book[]>(this.apiService.buildUrl('/public/books/newest'), {
+      context: new HttpContext().set(IS_PUBLIC_API, true)
+    });
   }
 
   // --- ADMIN METHODS ---
-  public getBooksList(): Observable<Books[]> {
-    return this.httpClient.get<Books[]>(this.ADMIN_URL);
+
+  public createBook(book: Partial<Book> & { authorIds: number[], categoryIds: number[] }): Observable<Book> {
+    return this.http.post<Book>(this.apiService.buildUrl('/admin/books'), book);
   }
 
-  public createBook(book: Partial<Books>): Observable<Books> {
-    return this.httpClient.post<Books>(this.ADMIN_URL, book);
+  public updateBook(id: number, bookData: any): Observable<Book> {
+    return this.http.put<Book>(this.apiService.buildUrl(`/admin/books/${id}`), bookData);
   }
 
-  public updateBook(id: number, bookData: Partial<Books>): Observable<Books> {
-    return this.httpClient.put<Books>(`${this.ADMIN_URL}/${id}`, bookData);
+  public deleteBook(id: number): Observable<void> {
+    return this.http.delete<void>(this.apiService.buildUrl(`/admin/books/${id}`));
   }
 
-  public deleteBook(id: number): Observable<Object> {
-    return this.httpClient.delete(`${this.ADMIN_URL}/${id}`);
-  }
-
-  // --- SỬA LỖI BẰNG CÁCH THÊM 2 HÀM NÀY ---
   public getAllAuthors(): Observable<Author[]> {
-    return this.httpClient.get<Author[]>(`${this.ADMIN_URL}/authors`);
+    return this.http.get<Author[]>(this.apiService.buildUrl('/admin/books/authors'));
   }
 
   public getAllCategories(): Observable<Category[]> {
-    return this.httpClient.get<Category[]>(`${this.ADMIN_URL}/categories`);
+    return this.http.get<Category[]>(this.apiService.buildUrl('/admin/books/categories'));
   }
 }

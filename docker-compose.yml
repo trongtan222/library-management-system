@@ -1,0 +1,51 @@
+services:
+  # 1. Database MySQL
+  db:
+    image: mysql:8.0
+    container_name: lms_db_container
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: lms_db
+    ports:
+      - "3307:3306" # Máy ngoài dùng 3307 -> Docker dùng 3306
+    volumes:
+      - db_data:/var/lib/mysql
+
+  # 2. Redis (Cho Chatbot)
+  redis:
+    image: redis:alpine
+    container_name: lms_redis_container
+    ports:
+      - "6379:6379"
+
+  # 3. Backend
+  backend:
+    build: ./lms-backend
+    container_name: lms_backend_container
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+      - redis
+    restart: on-failure
+    environment:
+      # Cấu hình đè lên application.properties
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/lms_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      # API Key của bạn (Lấy từ application.properties local dán vào đây)
+      GEMINI_API_KEY: AIzaSyAWQ-HL34H2YSZfejB2s-RB8Oq_H_uQvvE 
+
+  # 4. Frontend
+  frontend:
+    build: ./lms-frontend
+    container_name: lms_frontend_container
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  db_data:

@@ -1,7 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { Users } from '../models/users';
-import { BorrowService } from '../services/borrow.service';
+// SỬA: Import từ users.ts
+import { User } from '../models/user';
+import { CirculationService } from '../services/circulation.service'; // Use CirculationService instead of BorrowService
 import { UsersService } from '../services/users.service';
 import { LoanDetails } from '../services/admin.service';
 
@@ -15,19 +16,19 @@ export class UserDetailsComponent implements OnInit {
 
   id!: number;
   borrow: LoanDetails[] = [];
-  user!: Users;
+  user!: User;
 
   constructor(
     private route: ActivatedRoute,
-    private borrowService: BorrowService,
+    private circulationService: CirculationService,
     public userService: UsersService
   ) {}
 
   ngOnInit(): void {
     this.id = +this.route.snapshot.params['userId'];
 
-    this.user = new Users();
-    this.userService.getUserById(this.id).subscribe((data: Users) => {
+    this.user = new User();
+    this.userService.getUserById(this.id).subscribe((data: User) => {
       this.user = data;
     });
 
@@ -35,7 +36,7 @@ export class UserDetailsComponent implements OnInit {
   }
 
   private getBorrowedByUser(userId: number) {
-    this.borrowService.getLoansByMemberId(userId).subscribe((data: LoanDetails[]) => {
+    this.circulationService.getLoansByMemberId(userId).subscribe((data: LoanDetails[]) => {
       this.borrow = data;
     });
   }

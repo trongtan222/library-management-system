@@ -2,10 +2,10 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
-import { Books } from '../models/books';
-import { Users } from '../models/users';
+// SỬA: Import đúng tên và đường dẫn
+import { Book } from '../models/book';
+import { User } from '../models/user';
 
-// ... (các interface DashboardStats, DashboardDetails, etc. giữ nguyên) ...
 export interface DashboardStats {
   totalBooks: number;
   totalUsers: number;
@@ -47,7 +47,6 @@ export interface ReportSummary {
   finesByMonth: { month: string; totalFines: number }[];
 }
 
-
 @Injectable({
   providedIn: 'root'
 })
@@ -78,4 +77,3 @@ export class AdminService {
     return this.http.get<ReportSummary>(`${this.API_URL}/reports/summary`, { params });
   }
 }
-

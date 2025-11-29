@@ -32,6 +32,19 @@ public class Users {
     @Column(length = 100)
     private String email;
 
+    @Column(name = "student_class")
+    private String studentClass;
+
+    @Column(name = "phone_number")
+    private String phoneNumber;
+
+    // ... Getter và Setter cho 2 trường này ...
+    public String getStudentClass() { return studentClass; }
+    public void setStudentClass(String studentClass) { this.studentClass = studentClass; }
+
+    public String getPhoneNumber() { return phoneNumber; }
+    public void setPhoneNumber(String phoneNumber) { this.phoneNumber = phoneNumber; }
+
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
         name = "user_role",

@@ -17,6 +17,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.client.RestTemplate; // ✅ Thêm import này
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -56,10 +57,15 @@ public class WebSecurityConfiguration {
         return config.getAuthenticationManager();
     }
 
+    // ✅ THÊM BEAN RESTTEMPLATE (Bắt buộc cho ChatbotController)
+    @Bean
+    public RestTemplate restTemplate() {
+        return new RestTemplate();
+    }
+
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration c = new CorsConfiguration();
-        // Cấu hình này đã đúng, cho phép frontend của bạn
         c.setAllowedOrigins(List.of("http://localhost:4200"));
         c.setAllowedMethods(List.of("GET","POST","PUT","PATCH","DELETE","OPTIONS"));
         c.setAllowedHeaders(List.of("*"));
@@ -73,34 +79,27 @@ public class WebSecurityConfiguration {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
-            .cors(Customizer.withDefaults()) // Sử dụng CorsConfigurationSource ở trên
+            .cors(Customizer.withDefaults())
             .exceptionHandling(e -> e.authenticationEntryPoint(authenticationEntryPoint))
             .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             
-            // ⭐ SỬA LỖI 401: Thêm lại tiền tố /api vào các quy tắc
             .authorizeHttpRequests(a -> a
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                .requestMatchers(
-                    "/api/auth/**", // ĐÃ THÊM /api
-                    "/api/public/**", // ĐÃ THÊM /api (Cho phép mọi phương thức GET, POST...)
-                    
-                    // Các đường dẫn cho Swagger/Docs/Error (giữ nguyên)
-                    "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html",
-                    "/h2-console/**",
-                    "/error", "/favicon.ico"
-                ).permitAll()
+                .requestMatchers("/api/auth/**", "/api/public/**").permitAll()
+                .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/h2-console/**", "/error", "/favicon.ico").permitAll()
                 
-                // Quy tắc cũ cho /public/** đã được gộp vào quy tắc trên
+                // ✅ Cấu hình rõ ràng cho Chatbot để tránh 403
+                // Nếu bạn muốn test, có thể đổi hasRole("USER") thành authenticated() tạm thời
+                .requestMatchers("/api/user/chat/**").authenticated() 
                 
-                .requestMatchers("/api/user/**").hasRole("USER") // ĐÃ THÊM /api
-                .requestMatchers("/api/admin/**").hasRole("ADMIN") // ĐÃ THÊM /api
+                .requestMatchers("/api/user/**").hasAnyRole("USER", "ADMIN")
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 
                 .anyRequest().authenticated()
             )
             .authenticationProvider(authenticationProvider())
             .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
 
-        // Cần thiết cho H2 Console (nếu dùng)
         http.headers(h -> h.frameOptions(f -> f.disable())); 
         return http.build();
     }

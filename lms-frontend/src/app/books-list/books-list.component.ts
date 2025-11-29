@@ -1,11 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
-import { BooksService, Page } from '../services/books.service'; // Sửa: Import thêm Page
+import { BooksService, Page } from '../services/books.service';
 import { CirculationService } from '../services/circulation.service';
 import { ToastrService } from 'ngx-toastr';
-import { Books } from '../models/books'; // Import model
-
-type Row = Books; // Giữ nguyên: Row là bí danh của Books
+import { Book } from '../models/book';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
 @Component({
     selector: 'app-books-list',
@@ -13,38 +13,27 @@ type Row = Books; // Giữ nguyên: Row là bí danh của Books
     styleUrls: ['./books-list.component.css'],
     standalone: false
 })
-export class BooksListComponent implements OnInit {
-
-  // Sửa: Chỉ cần 1 mảng books
-  books: Row[] = []; 
-  
-  // Bỏ: filteredRows và pagedRows
-
+export class BooksListComponent implements OnInit, OnDestroy {
+  books: Book[] = [];
   loading = new Set<number>();
   page = 1;
-  pageSize = 10; // Đổi default size
+  pageSize = 10;
   totalPages = 0;
-  totalElements = 0; // Thêm
+  totalElements = 0;
   pageSizes = [5, 10, 20, 50];
   searchTerm = '';
 
-  // State cho borrow modal
   showBorrow = false;
-  borrowingRow: Row | null = null;
-  borrowForm = {
-    memberId: 0,
-    dueDate: '',
-  };
+  borrowingBook: Book | null = null;
+  borrowForm = { memberId: 0, dueDate: '' };
 
-  // State cho reserve modal
   showReserve = false;
-  reservingRow: Row | null = null;
-  reserveForm = {
-    memberId: 0
-  };
+  reservingBook: Book | null = null;
+  reserveForm = { memberId: 0 };
   
-  // State cho confirm delete modal
-  bookToDelete: Row | null = null;
+  bookToDelete: Book | null = null;
+  
+  private destroy$ = new Subject<void>();
 
   constructor(
     private booksService: BooksService,
@@ -53,127 +42,115 @@ export class BooksListComponent implements OnInit {
     private toastr: ToastrService
   ) {}
 
-  ngOnInit(): void { this.loadBooks(); } // Đổi tên hàm
+  ngOnInit(): void { this.loadBooks(); }
 
-  // --- HÀM TẢI DỮ LIỆU ĐÃ SỬA (SERVER-SIDE) ---
-  public loadBooks(goToPage: number = this.page) {
-    this.page = goToPage;
-    // Gọi getPublicBooks với availableOnly = false
-    this.booksService.getPublicBooks(
-      false, // Lấy tất cả sách (cả hết hàng)
-      this.searchTerm.trim() || null,
-      null, // Admin không cần lọc genre
-      this.page - 1,
-      this.pageSize
-    ).subscribe({
-      next: (data: Page<Books>) => {
-        // SỬA: Không cần map, gán trực tiếp
-        this.books = data.content; 
-        this.totalPages = data.totalPages;
-        this.totalElements = data.totalElements;
-      },
-      error: (err: any) => this.toastError(err)
-    });
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
-  // --- XÓA CÁC HÀM LỌC CŨ ---
-  // Xóa: private norm(s: string)
-  // Xóa: private match(row: Row, term: string)
-  // Xóa: applyFilters(goTo?: number)
-  // Xóa: private rebuildPage(goTo: number)
+  public loadBooks(goToPage: number = this.page) {
+    this.page = goToPage;
+    this.booksService.getPublicBooks(false, this.searchTerm.trim() || null, null, this.page - 1, this.pageSize)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (data: Page<Book>) => {
+          this.books = data.content;
+          this.totalPages = data.totalPages;
+          this.totalElements = data.totalElements;
+        },
+        error: (err) => this.toastError(err)
+      });
+  }
 
-  // --- SỬA CÁC HÀM PHÂN TRANG ---
   setPage(p: number) { this.loadBooks(p); }
   prevPage() { if (this.page > 1) this.loadBooks(this.page - 1); }
   nextPage() { if (this.page < this.totalPages) this.loadBooks(this.page + 1); }
   
-  // Sửa: Lấy giá trị từ $event.target.value
   changePageSize(event: any) { 
     this.pageSize = +(event.target.value); 
     this.loadBooks(1); 
   }
 
   updateBook(bookId: number) { this.router.navigate(['update-book', bookId]); }
-
   bookDetails(bookId: number) { this.router.navigate(['book-details', bookId]); }
 
-  // --- Logic Modal (giữ nguyên, chỉ sửa hàm callback) ---
-
-  openBorrow(row: Row) {
-    // Sửa: Dùng 'numberOfCopiesAvailable'
-    if (row.numberOfCopiesAvailable <= 0 || this.loading.has(row.id)) return;
-    this.borrowingRow = row;
-    this.borrowForm = {
-      memberId: 0,
-      dueDate: this.defaultDueDate(14),
-    };
+  // --- Borrow Modal ---
+  openBorrow(book: Book) {
+    if (book.numberOfCopiesAvailable <= 0 || this.loading.has(book.id)) return;
+    this.borrowingBook = book;
+    this.borrowForm = { memberId: 0, dueDate: this.defaultDueDate(14) };
     this.showBorrow = true;
   }
 
   closeBorrow() {
     this.showBorrow = false;
-    this.borrowingRow = null;
+    this.borrowingBook = null;
   }
 
   submitBorrow() {
-    if (!this.borrowingRow) return;
+    if (!this.borrowingBook) return;
     const { memberId, dueDate } = this.borrowForm;
     if (!memberId || !dueDate || memberId <= 0) {
-      return this.toastError({ message: 'Please enter a valid Member ID and due date.' });
+      return this.toastError({ message: 'Vui lòng nhập ID thành viên và ngày hết hạn hợp lệ.' });
     }
+    
     const loanDays = this.daysFromToday(dueDate);
-    if (loanDays <= 0) {
-      return this.toastError({ message: 'Due date must be in the future.' });
-    }
+    if (loanDays <= 0) return this.toastError({ message: 'Ngày hết hạn phải ở tương lai.' });
 
-    const row = this.borrowingRow;
-    this.loading.add(row.id);
-    this.circulation.loan({ bookId: row.id, memberId: Number(memberId), loanDays }).subscribe({
-      next: () => {
-        this.loading.delete(row.id);
-        this.toastOk(`Loan created for "${row.name}"`);
-        this.closeBorrow();
-        this.loadBooks(this.page); // Sửa: Tải lại trang hiện tại
-      },
-      error: (err: any) => {
-        this.loading.delete(row.id);
-        this.toastError(err);
-      }
-    });
+    const bookId = this.borrowingBook.id;
+    this.loading.add(bookId);
+    
+    this.circulation.loan({ bookId, memberId: Number(memberId), loanDays })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.loading.delete(bookId);
+          this.toastOk(`Đã tạo phiếu mượn cho "${this.borrowingBook?.name}"`);
+          this.closeBorrow();
+          this.loadBooks(this.page);
+        },
+        error: (err) => {
+          this.loading.delete(bookId);
+          this.toastError(err);
+        }
+      });
   }
 
-  // --- Reserve Modal Logic (giữ nguyên) ---
-  openReserve(row: Row) {
-    if (this.loading.has(row.id)) return;
-    this.reservingRow = row;
+  // --- Reserve Modal ---
+  openReserve(book: Book) {
+    if (this.loading.has(book.id)) return;
+    this.reservingBook = book;
     this.reserveForm = { memberId: 0 };
     this.showReserve = true;
   }
 
   closeReserve() {
     this.showReserve = false;
-    this.reservingRow = null;
+    this.reservingBook = null;
   }
 
   submitReserve() {
-    if (!this.reservingRow) return;
+    if (!this.reservingBook) return;
     const { memberId } = this.reserveForm;
-    if (!memberId || memberId <= 0) {
-      return this.toastError({ message: 'Please enter a valid Member ID.' });
-    }
-    const row = this.reservingRow;
-    this.loading.add(row.id);
-    this.circulation.reserve({ bookId: row.id, memberId: Number(memberId) }).subscribe({
-      next: () => {
-        this.loading.delete(row.id);
-        this.toastOk(`Reserved "${row.name}" for Member ID ${memberId}.`);
-        this.closeReserve();
-      },
-      error: (err: any) => {
-        this.loading.delete(row.id);
-        this.toastError(err);
-      }
-    });
+    if (!memberId || memberId <= 0) return this.toastError({ message: 'Vui lòng nhập ID thành viên hợp lệ.' });
+
+    const bookId = this.reservingBook.id;
+    this.loading.add(bookId);
+    
+    this.circulation.reserve({ bookId, memberId: Number(memberId) })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.loading.delete(bookId);
+          this.toastOk(`Đã đặt trước "${this.reservingBook?.name}" cho ID ${memberId}.`);
+          this.closeReserve();
+        },
+        error: (err) => {
+          this.loading.delete(bookId);
+          this.toastError(err);
+        }
+      });
   }
   
   isLoading(id: number) { return this.loading.has(id); }
@@ -188,36 +165,30 @@ export class BooksListComponent implements OnInit {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const due = new Date(dateStr);
-    const diff = Math.ceil((due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-    return diff;
+    return Math.ceil((due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
   }
 
-  deleteBook(book: Row): void {
-    this.bookToDelete = book; // Mở modal xác nhận
-  }
+  deleteBook(book: Book): void { this.bookToDelete = book; }
 
   confirmDelete(): void {
     if (!this.bookToDelete) return;
-    
-    const bookToDeleteCopy = { ...this.bookToDelete }; // Tạo bản sao để tránh lỗi
-    this.bookToDelete = null; // Đóng modal ngay
+    const bookCopy = { ...this.bookToDelete };
+    this.bookToDelete = null;
 
-    this.booksService.deleteBook(bookToDeleteCopy.id).subscribe({
-      next: () => {
-        this.toastOk(`Book "${bookToDeleteCopy.name}" was deleted.`);
-        this.loadBooks(this.page); // Sửa: Tải lại trang hiện tại
-      },
-      error: (err: any) => this.toastError(err)
-    });
+    this.booksService.deleteBook(bookCopy.id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.toastOk(`Đã xóa sách "${bookCopy.name}".`);
+          this.loadBooks(this.page);
+        },
+        error: (err) => this.toastError(err)
+      });
   }
 
-  private toastOk(msg: string) { 
-    this.toastr.success(msg, 'Thành công'); 
-  }
-
+  private toastOk(msg: string) { this.toastr.success(msg, 'Thành công'); }
   private toastError(err: any) {
-    const msg = err?.error?.message || err?.message || 'Đã có lỗi không mong muốn xảy ra.';
+    const msg = err?.error?.message || err?.message || 'Đã có lỗi xảy ra.';
     this.toastr.error(msg, 'Lỗi');
-    console.error(err);
   }
 }

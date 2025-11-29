@@ -36,6 +36,16 @@ public class JwtUtil {
     }
 }
 
+private Date currentTime = null;
+
+public void setCurrentTime(Date currentTime) {
+    this.currentTime = currentTime;
+}
+
+private Date now() {
+    return currentTime != null ? currentTime : new Date();
+}
+
 // ⭐ BẮT ĐẦU THÊM TỪ ĐÂY
   /**
    * Dùng cho mục đích Test (Unit Test)
@@ -54,7 +64,7 @@ public class JwtUtil {
 
   /** ✅ Dùng hàm này: thêm extra claims (userId, roles, ...) */
   public String generateToken(UserDetails user, Map<String, Object> extra) {
-    Date now = new Date();
+    Date now = now();
     Date exp = new Date(now.getTime() + expirationMs);
     Map<String, Object> claims = (extra == null) ? new HashMap<>() : new HashMap<>(extra);
     return Jwts.builder()
@@ -71,13 +81,17 @@ public class JwtUtil {
   }
 
   public boolean validateToken(String token, UserDetails user) {
-    String username = getUsernameFromToken(token);
-    return username != null && username.equals(user.getUsername()) && !isExpired(token);
+    try {
+      String username = getUsernameFromToken(token);
+      return username != null && username.equals(user.getUsername()) && !isExpired(token);
+    } catch (ExpiredJwtException e) {
+      return false;
+    }
   }
 
   private boolean isExpired(String token) {
     Date exp = getClaim(token, Claims::getExpiration);
-    return exp.before(new Date());
+    return exp.before(now());
   }
 
   private <T> T getClaim(String token, Function<Claims, T> resolver) {

@@ -1,0 +1,114 @@
+<div class="container mt-4">
+  <div class="card shadow-lg border-0 bg-dark text-white">
+    <div class="card-header bg-primary text-white">
+      <h3 class="mb-0"><i class="fa-solid fa-file-signature me-2"></i>Tạo Phiếu Mượn (Admin)</h3>
+    </div>
+    <div class="card-body p-4">
+      
+      <div class="row g-4">
+        <!-- CỘT 1: CHỌN NGƯỜI DÙNG -->
+        <div class="col-md-6 border-end border-secondary">
+          <h5 class="text-info mb-3"><i class="fa-solid fa-user me-2"></i>Bước 1: Chọn Độc Giả</h5>
+          
+          <!-- Input Tìm kiếm -->
+          <div class="position-relative mb-3" *ngIf="!selectedUser">
+            <input type="text" class="form-control form-control-lg bg-dark text-white border-secondary" 
+                   placeholder="Nhập tên hoặc username..."
+                   [ngModel]="userSearchTerm" 
+                   (ngModelChange)="onUserSearchChange($event)">
+            
+            <!-- List gợi ý -->
+            <div class="list-group position-absolute w-100 mt-1 shadow" style="z-index: 1000;" *ngIf="users.length > 0">
+              <button type="button" class="list-group-item list-group-item-action bg-dark text-white border-secondary"
+                      *ngFor="let u of users" (click)="selectUser(u)">
+                <strong>{{ u.name }}</strong> <small class="text-muted">({{ u.username }})</small>
+              </button>
+            </div>
+          </div>
+
+          <!-- Thẻ User đã chọn -->
+          <div class="selected-card p-3 rounded border border-success bg-opacity-10 bg-success" *ngIf="selectedUser">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <h5 class="mb-1 text-success">{{ selectedUser.name }}</h5>
+                <p class="mb-0 text-muted small">Username: {{ selectedUser.username }} | ID: {{ selectedUser.userId }}</p>
+              </div>
+              <button class="btn btn-outline-danger btn-sm" (click)="clearSelectedUser()">
+                <i class="fa-solid fa-times"></i> Bỏ chọn
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- CỘT 2: CHỌN SÁCH -->
+        <div class="col-md-6">
+          <h5 class="text-warning mb-3"><i class="fa-solid fa-book me-2"></i>Bước 2: Chọn Sách</h5>
+
+          <!-- Input Tìm kiếm -->
+          <div class="position-relative mb-3" *ngIf="!selectedBook">
+            <input type="text" class="form-control form-control-lg bg-dark text-white border-secondary" 
+                   placeholder="Nhập tên sách..."
+                   [ngModel]="bookSearchTerm" 
+                   (ngModelChange)="onBookSearchChange($event)">
+            
+            <!-- List gợi ý -->
+            <div class="list-group position-absolute w-100 mt-1 shadow" style="z-index: 1000;" *ngIf="books.length > 0">
+              <button type="button" class="list-group-item list-group-item-action bg-dark text-white border-secondary"
+                      *ngFor="let b of books" (click)="selectBook(b)">
+                <div class="d-flex align-items-center">
+                  <img [src]="b.coverUrl || 'assets/images/placeholder.png'" style="width: 30px; height: 45px; object-fit: cover;" class="me-2 rounded">
+                  <div>
+                    <div class="fw-bold">{{ b.name }}</div>
+                    <small class="text-muted">Còn: {{ b.numberOfCopiesAvailable }}</small>
+                  </div>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          <!-- Thẻ Sách đã chọn -->
+          <div class="selected-card p-3 rounded border border-warning bg-opacity-10 bg-warning" *ngIf="selectedBook">
+            <div class="d-flex align-items-start">
+              <img [src]="selectedBook.coverUrl || 'assets/images/placeholder.png'" 
+                   style="width: 60px; height: 90px; object-fit: cover;" class="me-3 rounded shadow-sm">
+              <div class="flex-grow-1">
+                <h5 class="mb-1 text-warning">{{ selectedBook.name }}</h5>
+                <p class="mb-1 text-muted small">
+                  Tác giả: <span *ngFor="let a of selectedBook.authors">{{ a.name }} </span>
+                </p>
+                <span class="badge bg-secondary">ID: {{ selectedBook.id }}</span>
+              </div>
+              <button class="btn btn-outline-danger btn-sm" (click)="clearSelectedBook()">
+                <i class="fa-solid fa-times"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <hr class="border-secondary my-4">
+
+      <!-- BƯỚC 3: CẤU HÌNH & SUBMIT -->
+      <div class="row align-items-end">
+        <div class="col-md-4">
+          <label class="form-label text-muted">Thời hạn mượn (Ngày)</label>
+          <select class="form-select bg-dark text-white border-secondary" [(ngModel)]="loanDays">
+            <option [ngValue]="7">7 Ngày (1 tuần)</option>
+            <option [ngValue]="14">14 Ngày (2 tuần)</option>
+            <option [ngValue]="30">30 Ngày (1 tháng)</option>
+          </select>
+        </div>
+        <div class="col-md-8 text-end">
+          <button class="btn btn-lg btn-success px-5" 
+                  [disabled]="!selectedUser || !selectedBook || isLoading"
+                  (click)="createLoan()">
+            <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-2"></span>
+            <i class="fa-solid fa-check-circle me-2" *ngIf="!isLoading"></i>
+            Xác Nhận Cấp Sách
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

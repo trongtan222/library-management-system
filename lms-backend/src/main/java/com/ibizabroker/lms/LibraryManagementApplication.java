@@ -85,9 +85,4 @@ public class LibraryManagementApplication {
         book.setNumberOfCopiesAvailable(copies);
         return book;
     }
-
-    @Bean
-    public RestTemplate restTemplate() {
-        return new RestTemplate();
-    }
 }

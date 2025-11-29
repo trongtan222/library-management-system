@@ -17,6 +17,7 @@ public class Category {
     private String name;
 
     @ManyToMany(mappedBy = "categories")
+    @JsonIgnore
     private Set<Books> books = new HashSet<>();
 
     // Getters and Setters

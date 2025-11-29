@@ -60,6 +60,9 @@ public class AuthController {
         u.setName(req.getName().trim());
         u.setUsername(username);
         u.setPassword(encoder.encode(req.getPassword()));
+        u.setEmail(req.getEmail());
+        u.setStudentClass(req.getStudentClass());
+        u.setPhoneNumber(req.getPhoneNumber());
 
         Role userRole = roleRepo.findByRoleName("ROLE_USER").orElseGet(() -> {
             Role r = new Role();

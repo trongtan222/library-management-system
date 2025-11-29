@@ -29,31 +29,45 @@ public class CirculationService {
     }
 
     @Transactional
-    public Loan loanBook(LoanRequest req){
-        List<Reservation> queue = reservationRepo
-            .findTop10ByBookIdAndStatusOrderByCreatedAtAsc(req.getBookId(), ReservationStatus.ACTIVE);
-        if(!queue.isEmpty() && !queue.get(0).getMemberId().equals(req.getMemberId()))
-            throw new IllegalStateException("Book is reserved for another member.");
+    public Loan loanBook(LoanRequest req) {
+        // 1. Xác định số lượng cần mượn (mặc định là 1 nếu không nhập)
+        int quantityToBorrow = (req.getQuantity() != null && req.getQuantity() > 0) ? req.getQuantity() : 1;
+        Loan lastLoan = null;
 
-        int updated = booksRepo.decrementAvailable(req.getBookId());
-        if(updated==0) throw new IllegalStateException("No copies available.");
+        // 2. Thực hiện vòng lặp để mượn từng cuốn
+        for (int i = 0; i < quantityToBorrow; i++) {
+            List<Reservation> queue = reservationRepo
+                .findTop10ByBookIdAndStatusOrderByCreatedAtAsc(req.getBookId(), ReservationStatus.ACTIVE);
+            
+            if(!queue.isEmpty() && !queue.get(0).getMemberId().equals(req.getMemberId()))
+                throw new IllegalStateException("Sách đang được giữ chỗ cho người khác.");
 
-        LocalDate today = LocalDate.now();
-        Loan loan = new Loan();
-        loan.setBookId(req.getBookId());
-        loan.setMemberId(req.getMemberId());
-        loan.setLoanDate(today);
-        loan.setDueDate(today.plusDays(req.getLoanDays()!=null?req.getLoanDays():14));
-        loan.setStatus(LoanStatus.ACTIVE);
-        loan.setFineStatus("NO_FINE");
-        Loan saved = loanRepo.save(loan);
+            // Trừ tồn kho
+            int updated = booksRepo.decrementAvailable(req.getBookId());
+            if(updated == 0) throw new IllegalStateException("Không đủ số lượng sách trong kho.");
 
-        if(!queue.isEmpty() && queue.get(0).getMemberId().equals(req.getMemberId())){
-            Reservation r = queue.get(0);
-            r.setStatus(ReservationStatus.FULFILLED);
-            reservationRepo.save(r);
+            LocalDate today = LocalDate.now();
+            Loan loan = new Loan();
+            loan.setBookId(req.getBookId());
+            loan.setMemberId(req.getMemberId());
+            loan.setLoanDate(today);
+            loan.setDueDate(today.plusDays(req.getLoanDays() != null ? req.getLoanDays() : 14));
+            loan.setStatus(LoanStatus.ACTIVE);
+            loan.setFineStatus("NO_FINE");
+            
+            // Lưu ý: Tạm thời chúng ta chưa lưu studentName/Class vào DB để tránh lỗi cấu trúc bảng.
+            // Thông tin này hiện tại dùng để xác nhận ở phía Frontend.
+            
+            lastLoan = loanRepo.save(loan);
+
+            if(!queue.isEmpty() && queue.get(0).getMemberId().equals(req.getMemberId())){
+                Reservation r = queue.get(0);
+                r.setStatus(ReservationStatus.FULFILLED);
+                reservationRepo.save(r);
+            }
         }
-        return saved;
+        
+        return lastLoan; // Trả về đơn cuối cùng để lấy trạng thái
     }
 
     @Transactional

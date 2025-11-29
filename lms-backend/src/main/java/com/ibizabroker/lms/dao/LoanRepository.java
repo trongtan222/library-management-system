@@ -16,7 +16,6 @@ import java.util.Map;
 
 public interface LoanRepository extends JpaRepository<Loan, Integer> {
 
-    // ... (các phương thức hiện có)
     Page<Loan> findByMemberId(Integer memberId, Pageable pageable);
     List<Loan> findByMemberId(Integer memberId);
     List<Loan> findByMemberIdAndStatus(Integer memberId, LoanStatus status);
@@ -30,12 +29,10 @@ public interface LoanRepository extends JpaRepository<Loan, Integer> {
            "ORDER BY l.loanDate DESC")
     List<LoanDetailsDto> findAllLoanDetails();
 
-    // === BỔ SUNG PHƯƠNG THỨC MỚI TẠI ĐÂY ===
     @Query("SELECT new com.ibizabroker.lms.dto.LoanDetailsDto(l.id, b.name, u.name, l.loanDate, l.dueDate, l.returnDate, l.status) " +
            "FROM Loan l JOIN Books b ON l.bookId = b.id JOIN Users u ON l.memberId = u.userId " +
            "WHERE l.memberId = :memberId ORDER BY l.loanDate DESC")
     List<LoanDetailsDto> findLoanDetailsByMemberId(@Param("memberId") Integer memberId);
-
 
     @Query("SELECT l.bookId as bookId, COUNT(l.bookId) as loanCount FROM Loan l GROUP BY l.bookId ORDER BY loanCount DESC")
     List<Map<String, Object>> findMostLoanedBooks(Pageable pageable);
@@ -55,13 +52,15 @@ public interface LoanRepository extends JpaRepository<Loan, Integer> {
     
     List<Loan> findByStatusAndDueDate(LoanStatus status, LocalDate dueDate);
     
-    @Query(value = "SELECT DATE_FORMAT(l.loan_date, '%Y-%m') AS month, COUNT(l.id) AS count " +
+    // === Query cho Chart.js: Thống kê mượn theo tháng ===
+    @Query(value = "SELECT MONTH(l.loan_date) AS month, COUNT(l.id) AS count " +
                    "FROM loans l " +
                    "WHERE l.loan_date BETWEEN :start AND :end " +
-                   "GROUP BY month " +
+                   "GROUP BY MONTH(l.loan_date) " +
                    "ORDER BY month ASC", nativeQuery = true)
     List<Map<String, Object>> findLoanCountsByMonth(@Param("start") LocalDate start, @Param("end") LocalDate end);
 
+    // === Query cho Chart.js: Top sách mượn nhiều ===
     @Query(value = "SELECT b.name AS bookName, COUNT(l.id) AS loanCount " +
                    "FROM loans l JOIN books b ON l.book_id = b.id " +
                    "WHERE l.loan_date BETWEEN :start AND :end " +
@@ -69,4 +68,8 @@ public interface LoanRepository extends JpaRepository<Loan, Integer> {
                    "ORDER BY loanCount DESC " +
                    "LIMIT 5", nativeQuery = true)
     List<Map<String, Object>> findMostLoanedBooksInPeriod(@Param("start") LocalDate start, @Param("end") LocalDate end);
+
+    // === Query cho Chart.js: Trạng thái đơn mượn ===
+    @Query("SELECT l.status, COUNT(l) FROM Loan l GROUP BY l.status")
+    List<Object[]> countLoansByStatus();
 }

@@ -175,3 +175,63 @@ thead th {
   from { opacity: 0; transform: translateY(15px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* --- FIX MÀU CHỮ TRÙNG NỀN --- */
+
+/* 1. Form Inputs (Input, Select, Textarea) */
+.form-control, .form-select, input, select, textarea {
+  background-color: #21262d !important; /* Màu nền tối */
+  color: #e6edf3 !important;           /* Màu chữ sáng */
+  border: 1px solid var(--border);
+}
+
+.form-control:focus, .form-select:focus {
+  background-color: #30363d !important; /* Nền khi focus */
+  color: #ffffff !important;           /* Chữ khi focus */
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.3);
+}
+
+/* Placeholder (chữ gợi ý mờ) */
+::placeholder {
+  color: #8b949e !important;
+  opacity: 1;
+}
+
+/* 2. Modal (Hộp thoại) */
+.modal-content {
+  background-color: #161b22 !important; /* Nền modal tối */
+  color: #c9d1d9 !important;            /* Chữ modal sáng */
+  border: 1px solid var(--border);
+}
+
+.modal-header, .modal-footer {
+  border-color: var(--border) !important;
+  background-color: #0d1117 !important; /* Header/Footer tối hơn chút */
+}
+
+.modal-title {
+  color: #f0f6fc !important; /* Tiêu đề modal sáng rõ */
+}
+
+.btn-close {
+  filter: invert(1); /* Đảo màu nút đóng X sang trắng */
+}
+
+/* 3. Table (Bảng) */
+.table {
+  color: #c9d1d9 !important; /* Chữ trong bảng sáng */
+}
+
+/* 4. Dropdown Menu */
+.dropdown-menu {
+  background-color: #161b22 !important;
+  border: 1px solid var(--border);
+}
+.dropdown-item {
+  color: #c9d1d9 !important;
+}
+.dropdown-item:hover {
+  background-color: var(--accent) !important;
+  color: #fff !important;
+}

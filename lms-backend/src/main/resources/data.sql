@@ -1,152 +1,189 @@
--- DELETE existing test users to ensure CommandLineRunner creates them with correct hashes
--- Must delete user_role FIRST due to foreign key constraint, then users
-DELETE FROM user_role WHERE user_id IN (SELECT user_id FROM users WHERE username IN ('admin', 'user'));
-DELETE FROM users WHERE username IN ('admin', 'user');
+-- ============================================================
+-- DỮ LIỆU MẪU THƯ VIỆN TRƯỜNG THCS PHƯƠNG TÚ (BẢN MỞ RỘNG)
+-- ============================================================
 
--- Thêm vai trò
-INSERT IGNORE INTO role (role_id, role_name) VALUES (1, 'ROLE_ADMIN'), (2, 'ROLE_USER');
+USE lms_db;
+SET FOREIGN_KEY_CHECKS = 0;
 
--- NOTE: Test users (admin/admin123, user/user123) are now created by LibraryManagementApplication.java
--- This ensures passwords are correctly hashed with BCryptPasswordEncoder
--- REMOVED: Hardcoded user inserts with pre-hashed passwords
+-- 1. XÓA DỮ LIỆU CŨ
+TRUNCATE TABLE book_authors;
+TRUNCATE TABLE book_categories;
+TRUNCATE TABLE books;
+TRUNCATE TABLE authors;
+TRUNCATE TABLE categories;
 
--- Thêm Tác Giả (Cập nhật)
-INSERT IGNORE INTO authors (id, name) VALUES
-(1, 'Harper Lee'), (2, 'George Orwell'), (3, 'F. Scott Fitzgerald'), (4, 'J.R.R. Tolkien'),
-(5, 'Jane Austen'), (6, 'J.D. Salinger'), (7, 'Herman Melville'), (8, 'Leo Tolstoy'),
-(9, 'Paulo Coelho'), (10, 'Yuval Noah Harari'), (11, 'Tara Westover'), (12, 'Michelle Obama'),
-(13, 'Anne Frank'), (14, 'Bill Bryson'), (15, 'Barbara W. Tuchman'), (16, 'Frank Herbert'),
-(17, 'Douglas Adams'), (18, 'J.K. Rowling'), (19, 'George R.R. Martin'), (20, 'Ray Bradbury'),
-(21, 'Aldous Huxley'), (22, 'Patrick Rothfuss'), (23, 'Stephen R. Covey'), (24, 'Dale Carnegie'),
-(25, 'Robert T. Kiyosaki'), (26, 'Daniel Kahneman'), (27, 'James Clear'), (28, 'Eric Ries'),
-(29, 'Robert C. Martin'), 
-(30, 'Andrew Hunt'), (31, 'Erich Gamma'), (32, 'Thomas H. Cormen'), (33, 'Stuart Russell'),
-(34, 'Gayle Laakmann McDowell'), (35, 'Stieg Larsson'), (36, 'Gillian Flynn'), (37, 'Dan Brown'),
-(38, 'Agatha Christie'), (39, 'Marcus Aurelius'), (40, 'Friedrich Nietzsche'), (41, 'Jostein Gaarder'),
-(42, 'Vũ Trọng Phụng'), (43, 'Tô Hoài'), (44, 'Ngô Tất Tố'), (45, 'Nguyễn Nhật Ánh'),
-(46, 'Đoàn Giỏi'),
--- Thêm các tác giả còn thiếu
-(47, 'David Thomas'), -- Cho sách 'The Pragmatic Programmer'
-(48, 'Richard Helm'), -- Cho sách 'Design Patterns'
-(49, 'Ralph Johnson'), -- Cho sách 'Design Patterns'
-(50, 'John Vlissides'); -- Cho sách 'Design Patterns'
+-- 2. THÊM DANH MỤC
+INSERT INTO categories (id, name) VALUES
+(1, 'Sách Giáo Khoa'),
+(2, 'Sách Tham Khảo'),
+(3, 'Văn Học Việt Nam'),
+(4, 'Văn Học Nước Ngoài'),
+(5, 'Truyện Tranh'),
+(6, 'Kỹ Năng Sống'),
+(7, 'Khoa Học - Khám Phá'),
+(8, 'Lịch Sử - Địa Lý'),
+(9, 'Tiếng Anh');
 
--- Thêm Thể Loại
-INSERT IGNORE INTO categories (id, name) VALUES
-(1, 'Tiểu thuyết'), (2, 'Phản địa đàng'), (3, 'Giả tưởng'), (4, 'Lãng mạn'), (5, 'Phiêu lưu'),
-(6, 'Tiểu thuyết lịch sử'), (7, 'Lịch sử'), (8, 'Hồi ký'), (9, 'Tiểu sử'), (10, 'Khoa học'),
-(11, 'Khoa học viễn tưởng'), (12, 'Phát triển bản thân'), (13, 'Tài chính'), (14, 'Tâm lý học'),
-(15, 'Kinh doanh'), (16, 'Công nghệ phần mềm'), (17, 'Khoa học máy tính'), (18, 'Trí tuệ nhân tạo'),
-(19, 'Trinh thám'), (20, 'Bí ẩn'), (21, 'Triết học'), (22, 'Trào phúng'), (23, 'Thiếu nhi'),
-(24, 'Hiện thực xã hội');
+-- 3. THÊM TÁC GIẢ
+INSERT INTO authors (id, name) VALUES
+(1, 'Bộ Giáo Dục & Đào Tạo'),
+(2, 'Nguyễn Nhật Ánh'),
+(3, 'Tô Hoài'),
+(4, 'Nam Cao'),
+(5, 'Đoàn Giỏi'),
+(6, 'J.K. Rowling'),
+(7, 'Fujiko F. Fujio'),
+(8, 'Arthur Conan Doyle'),
+(9, 'Nguyễn Du'),
+(10, 'Vũ Trọng Phụng'),
+(11, 'Rosie Nguyễn'),
+(12, 'Antoine de Saint-Exupéry'),
+(13, 'Hector Malot'),
+(14, 'Gosho Aoyama'),
+(15, 'Nhiều Tác Giả'),
+(16, 'Thạch Lam'),
+(17, 'Nguyên Hồng'),
+(18, 'Mark Twain'),
+(19, 'Daniel Defoe'),
+(20, 'Dale Carnegie');
 
--- Thêm Sách
-INSERT IGNORE INTO books (id, number_of_copies_available, published_year, isbn, cover_url, name) VALUES
-(1, 4, 1960, '978-0061120084', 'http://books.google.com/books/content?id=3t5dtAEACAAJ&printsec=frontcover&img=1&zoom=1&source=gbs_api', 'To Kill a Mockingbird'),
-(2, 7, 1949, '978-0451524935', NULL, '1984'),
-(3, 4, 1925, '978-0743273565', NULL, 'The Great Gatsby'),
-(4, 6, 1954, '978-0618640157', NULL, 'The Lord of the Rings'),
-(5, 8, 1813, '978-1503290563', NULL, 'Pride and Prejudice'),
-(6, 3, 1951, '978-0316769488', NULL, 'The Catcher in the Rye'),
-(7, 4, 1851, '978-1503280786', NULL, 'Moby Dick'),
-(8, 1, 1869, '978-1420952138', NULL, 'War and Peace'),
-(9, 15, 1988, '978-0061122416', NULL, 'The Alchemist'),
-(10, 10, 2011, '978-0062316097', NULL, 'Sapiens: A Brief History of Humankind'),
-(11, 6, 2018, '978-0399590504', NULL, 'Educated'),
-(12, 8, 2018, '978-1524763138', NULL, 'Becoming'),
-(13, 5, 1947, '978-0553296983', NULL, 'The Diary of a Young Girl'),
-(14, 7, 2003, '978-0767908184', 'http://books.google.com/books/content?id=hhnIWGD5Zt0C&printsec=frontcover&img=1&zoom=1&edge=curl&source=gbs_api', 'A Short History of Nearly Everything'),
-(15, 4, 1962, '978-0345386236', NULL, 'The Guns of August'),
-(16, 6, 1965, '978-0441013593', NULL, 'Dune'),
-(17, 9, 1979, '978-0345391803', NULL, 'The Hitchhiker''s Guide to the Galaxy'),
-(18, 12, 1997, '978-0590353427', NULL, 'Harry Potter and the Sorcerer''s Stone'),
-(19, 5, 1996, '978-0553593716', NULL, 'A Game of Thrones'),
-(20, 6, 1953, '978-1451673319', NULL, 'Fahrenheit 451'),
-(21, 5, 1932, '978-0060850524', NULL, 'Brave New World'),
-(22, 8, 2007, '978-0756404741', NULL, 'The Name of the Wind'),
-(23, 10, 1989, '978-1982137274', NULL, 'The 7 Habits of Highly Effective People'),
-(24, 11, 1936, '978-0671027032', NULL, 'How to Win Friends and Influence People'),
-(25, 8, 1997, '978-1612680194', NULL, 'Rich Dad Poor Dad'),
-(26, 5, 2011, '978-0374533557', NULL, 'Thinking, Fast and Slow'),
-(27, 15, 2018, '978-0735211292', NULL, 'Atomic Habits'),
-(28, 9, 2011, '978-0307887894', NULL, 'The Lean Startup'),
-(29, 7, 2008, '978-0132350884', NULL, 'Clean Code'),
-(30, 6, 1999, '978-0201616224', NULL, 'The Pragmatic Programmer'),
-(31, 4, 1994, '978-0201633610', NULL, 'Design Patterns'),
-(32, 3, 1990, '978-0262033848', NULL, 'Introduction to Algorithms'),
-(33, 4, 1995, '978-0136042594', NULL, 'Artificial Intelligence: A Modern Approach'),
-(34, 10, 2015, '978-0984782857', NULL, 'Cracking the Coding Interview'),
-(35, 7, 2005, '978-0307473479', NULL, 'The Girl with the Dragon Tattoo'),
-(36, 8, 2012, '978-0307588371', NULL, 'Gone Girl'),
-(37, 10, 2003, '978-0307474278', NULL, 'The Da Vinci Code'),
-(38, 9, 1939, '978-0312330873', NULL, 'And Then There Were None'),
-(39, 6, 180, '978-0140449334', NULL, 'Meditations'),
-(40, 3, 1883, '978-0140441185', NULL, 'Thus Spoke Zarathustra'),
-(41, 5, 1991, '978-0374530716', 'http://books.google.com/books/content?id=J8nE3B5lD9AC&printsec=frontcover&img=1&zoom=1&edge=curl&source=gbs_api', 'Sophie''s World'),
-(42, 7, 1936, '978-6049692408', NULL, 'Số Đỏ'),
-(43, 15, 1941, '978-6042058315', NULL, 'Dế Mèn Phiêu Lưu Ký'),
-(44, 6, 1937, '978-6049533367', NULL, 'Tắt Đèn'),
-(45, 20, 2008, '978-6042188708', NULL, 'Cho Tôi Xin Một Vé Đi Tuổi Thơ'),
-(46, 10, 1957, '978-6042083232', NULL, 'Đất Rừng Phương Nam');
+-- 4. THÊM SÁCH
+INSERT INTO books (id, name, published_year, number_of_copies_available, cover_url, isbn) VALUES
 
--- Thêm quan hệ Sách - Tác giả (Cập nhật)
-INSERT IGNORE INTO book_authors (book_id, author_id) VALUES
-(1, 1), (2, 2), (3, 3), (4, 4), (5, 5), (6, 6), (7, 7), (8, 8), (9, 9), (10, 10),
-(11, 11), (12, 12), (13, 13), (14, 14), (15, 15), (16, 16), (17, 17), (18, 18), (19, 19),
-(20, 20), (21, 21), (22, 22), (23, 23), (24, 24), (25, 25), (26, 26), (27, 27), (28, 28),
-(29, 29), 
--- Cập nhật 'The Pragmatic Programmer' (ID 30)
-(30, 30), (30, 47),
--- Cập nhật 'Design Patterns' (ID 31) - "Gang of Four"
-(31, 31), (31, 48), (31, 49), (31, 50),
-(32, 32), (33, 33), (34, 34), (35, 35), (36, 36), (37, 37),
-(38, 38), (39, 39), (40, 40), (41, 41), (42, 42), (43, 43), (44, 44), (45, 45), (46, 46);
+-- === KHỐI 6 (Chân trời sáng tạo / Kết nối tri thức) ===
+(1, 'Ngữ Văn 6 - Tập 1 (CTST)', 2024, 50, 'https://cdn0.fahasa.com/media/catalog/product/8/9/8935279136912.jpg', 'SGK-6-NV1'),
+(2, 'Ngữ Văn 6 - Tập 2 (CTST)', 2024, 50, 'https://cdn0.fahasa.com/media/catalog/product/8/9/8935279136929.jpg', 'SGK-6-NV2'),
+(3, 'Toán 6 - Tập 1 (KNTT)', 2024, 45, 'https://cdn0.fahasa.com/media/catalog/product/8/9/8936036286039.jpg', 'SGK-6-T1'),
+(4, 'Toán 6 - Tập 2 (KNTT)', 2024, 45, 'https://cdn0.fahasa.com/media/catalog/product/8/9/8936036286046.jpg', 'SGK-6-T2'),
+(5, 'Tiếng Anh 6 (Global Success)', 2024, 40, 'https://cdn0.fahasa.com/media/catalog/product/8/9/8936036286176.jpg', 'SGK-6-AV'),
+(6, 'Khoa Học Tự Nhiên 6', 2024, 35, 'https://cdn0.fahasa.com/media/catalog/product/8/9/8936036286091.jpg', 'SGK-6-KHTN'),
+(7, 'Lịch Sử và Địa Lí 6', 2024, 35, 'https://cdn0.fahasa.com/media/catalog/product/8/9/8936036286138.jpg', 'SGK-6-SD'),
 
--- Thêm quan hệ Sách - Thể loại (Cập nhật)
-INSERT IGNORE INTO book_categories (book_id, category_id) VALUES
-(1, 1), 
-(2, 2), (2, 1), -- '1984' (Phản địa đàng, Tiểu thuyết)
-(3, 1), 
-(4, 3), 
-(5, 4), 
-(6, 1), 
-(7, 5), 
-(8, 6), (8, 1), -- 'War and Peace' (Tiểu thuyết lịch sử, Tiểu thuyết)
-(9, 3), 
-(10, 7),
-(11, 8), 
-(12, 8), 
-(13, 9), 
-(14, 10), 
-(15, 7), 
-(16, 11), (16, 1), -- 'Dune' (Khoa học viễn tưởng, Tiểu thuyết)
-(17, 11), 
-(18, 3), 
-(19, 3),
-(20, 2), (20, 1), -- 'Fahrenheit 451' (Phản địa đàng, Tiểu thuyết)
-(21, 2), (21, 1), -- 'Brave New World' (Phản địa đàng, Tiểu thuyết)
-(22, 3), 
-(23, 12), 
-(24, 12), 
-(25, 13), 
-(26, 14), 
-(27, 12), 
-(28, 15),
-(29, 16), 
-(30, 16), 
-(31, 16), 
-(32, 17), 
-(33, 18), 
-(34, 17), 
-(35, 19), 
-(36, 19), 
-(37, 20), (37, 19), -- 'The Da Vinci Code' (Bí ẩn, Trinh thám)
-(38, 20), 
-(39, 21), 
-(40, 21), 
-(41, 21), (41, 1), -- 'Sophie's World' (Triết học, Tiểu thuyết)
-(42, 22), (42, 1), -- 'Số Đỏ' (Trào phúng, Tiểu thuyết)
-(43, 23), 
-(44, 24), (44, 1), -- 'Tắt Đèn' (Hiện thực xã hội, Tiểu thuyết)
-(45, 23), 
-(46, 5);
+-- === KHỐI 7 (Cánh Diều / KNTT) ===
+(8, 'Ngữ Văn 7 - Tập 1 (Cánh Diều)', 2024, 40, 'https://cdn0.fahasa.com/media/catalog/product/8/9/8935262406602.jpg', 'SGK-7-NV1'),
+(9, 'Ngữ Văn 7 - Tập 2 (Cánh Diều)', 2024, 40, 'https://cdn0.fahasa.com/media/catalog/product/8/9/8935262406619.jpg', 'SGK-7-NV2'),
+(10, 'Toán 7 - Tập 1 (KNTT)', 2024, 40, 'https://cdn0.fahasa.com/media/catalog/product/8/9/8936036286121.jpg', 'SGK-7-T1'),
+(11, 'Toán 7 - Tập 2 (KNTT)', 2024, 40, 'https://cdn0.fahasa.com/media/catalog/product/8/9/8936036286138.jpg', 'SGK-7-T2'),
+(12, 'Tiếng Anh 7 (Global Success)', 2024, 40, 'https://cdn0.fahasa.com/media/catalog/product/8/9/8936036288521.jpg', 'SGK-7-AV'),
+(13, 'Khoa Học Tự Nhiên 7', 2024, 35, 'https://cdn0.fahasa.com/media/catalog/product/8/9/8936036287159.jpg', 'SGK-7-KHTN'),
+
+-- === KHỐI 8 (Kết nối tri thức) ===
+(14, 'Ngữ Văn 8 - Tập 1', 2024, 40, 'https://cdn0.fahasa.com/media/catalog/product/8/9/8936036289252.jpg', 'SGK-8-NV1'),
+(15, 'Ngữ Văn 8 - Tập 2', 2024, 40, 'https://cdn0.fahasa.com/media/catalog/product/8/9/8936036289269.jpg', 'SGK-8-NV2'),
+(16, 'Toán 8 - Tập 1', 2024, 40, 'https://cdn0.fahasa.com/media/catalog/product/8/9/8936036289191.jpg', 'SGK-8-T1'),
+(17, 'Toán 8 - Tập 2', 2024, 40, 'https://cdn0.fahasa.com/media/catalog/product/8/9/8936036289207.jpg', 'SGK-8-T2'),
+(18, 'Tiếng Anh 8 (Global Success)', 2024, 35, 'https://cdn0.fahasa.com/media/catalog/product/8/9/8936036289368.jpg', 'SGK-8-AV'),
+(19, 'Khoa Học Tự Nhiên 8', 2024, 30, 'https://cdn0.fahasa.com/media/catalog/product/8/9/8936036289276.jpg', 'SGK-8-KHTN'),
+(20, 'Lịch Sử và Địa Lí 8', 2024, 30, 'https://cdn0.fahasa.com/media/catalog/product/8/9/8936036289313.jpg', 'SGK-8-SD'),
+
+-- === KHỐI 9 (Lớp cuối cấp) ===
+(21, 'Ngữ Văn 9 - Tập 1', 2024, 50, 'https://cdn0.fahasa.com/media/catalog/product/i/m/image_195509_1_43156.jpg', 'SGK-9-NV1'),
+(22, 'Ngữ Văn 9 - Tập 2', 2024, 50, 'https://cdn0.fahasa.com/media/catalog/product/i/m/image_195509_1_43157.jpg', 'SGK-9-NV2'),
+(23, 'Toán 9 - Tập 1', 2024, 50, 'https://cdn0.fahasa.com/media/catalog/product/i/m/image_244718.jpg', 'SGK-9-T1'),
+(24, 'Toán 9 - Tập 2', 2024, 50, 'https://cdn0.fahasa.com/media/catalog/product/i/m/image_244719.jpg', 'SGK-9-T2'),
+(25, 'Tiếng Anh 9', 2024, 45, 'https://cdn0.fahasa.com/media/catalog/product/i/m/image_195509_1_43172.jpg', 'SGK-9-AV'),
+(26, 'Vật Lí 9', 2024, 35, 'https://cdn0.fahasa.com/media/catalog/product/i/m/image_195509_1_43162.jpg', 'SGK-9-LY'),
+(27, 'Hóa Học 9', 2024, 35, 'https://cdn0.fahasa.com/media/catalog/product/i/m/image_180353.jpg', 'SGK-9-HOA'),
+(28, 'Sinh Học 9', 2024, 35, 'https://cdn0.fahasa.com/media/catalog/product/i/m/image_195509_1_43166.jpg', 'SGK-9-SINH'),
+(29, 'Lịch Sử 9', 2024, 30, 'https://cdn0.fahasa.com/media/catalog/product/i/m/image_195509_1_43168.jpg', 'SGK-9-SU'),
+(30, 'Địa Lí 9', 2024, 30, 'https://cdn0.fahasa.com/media/catalog/product/i/m/image_195509_1_43169.jpg', 'SGK-9-DIA'),
+
+-- === SÁCH THAM KHẢO & ÔN LUYỆN ===
+(31, '500 Bài Tập Vật Lí 6', 2022, 15, 'https://cdn0.fahasa.com/media/catalog/product/5/0/500-bai-tap-vat-li-6_1.jpg', 'TK-LY6'),
+(32, 'Bồi Dưỡng Học Sinh Giỏi Toán 7', 2023, 10, 'https://cdn0.fahasa.com/media/catalog/product/b/o/boi-duong-hoc-sinh-gioi-toan-7-tap-1-hinh-hoc_1.jpg', 'TK-TOAN7'),
+(33, 'Giải Bài Tập Hóa Học 8', 2023, 12, 'https://cdn0.fahasa.com/media/catalog/product/g/i/giai-bai-tap-hoa-hoc-8.jpg', 'TK-HOA8'),
+(34, 'Ôn Luyện Thi Vào Lớp 10 Môn Toán', 2024, 30, 'https://cdn0.fahasa.com/media/catalog/product/o/n/on-luyen-thi-vao-lop-10-thpt-nam-hoc-2024-2025-mon-toan.jpg', 'TK-10-TOAN'),
+(35, 'Ôn Luyện Thi Vào Lớp 10 Môn Văn', 2024, 30, 'https://cdn0.fahasa.com/media/catalog/product/o/n/on-luyen-thi-vao-lop-10-thpt-nam-hoc-2024-2025-mon-ngu-van.jpg', 'TK-10-VAN'),
+(36, 'Ôn Luyện Thi Vào Lớp 10 Môn Anh', 2024, 30, 'https://cdn0.fahasa.com/media/catalog/product/o/n/on-luyen-thi-vao-lop-10-thpt-nam-hoc-2024-2025-mon-tieng-anh.jpg', 'TK-10-AV'),
+
+-- === VĂN HỌC TUỔI XANH (Nguyễn Nhật Ánh) ===
+(37, 'Cho Tôi Xin Một Vé Đi Tuổi Thơ', 2008, 15, 'https://cdn0.fahasa.com/media/catalog/product/c/h/cho-toi-xin-mot-ve-di-tuoi-tho-bia-mem-2023_1.jpg', 'NNA-001'),
+(38, 'Mắt Biếc', 1990, 12, 'https://cdn0.fahasa.com/media/catalog/product/m/a/mat-biec-bia-mem-2019.jpg', 'NNA-002'),
+(39, 'Kính Vạn Hoa (Bộ 3 Tập)', 2000, 8, 'https://cdn0.fahasa.com/media/catalog/product/8/9/8934974148183.jpg', 'NNA-003'),
+(40, 'Cô Gái Đến Từ Hôm Qua', 1989, 10, 'https://cdn0.fahasa.com/media/catalog/product/c/o/co-gai-den-tu-hom-qua-bia-mem-2018.jpg', 'NNA-004'),
+(41, 'Tôi Thấy Hoa Vàng Trên Cỏ Xanh', 2010, 14, 'https://cdn0.fahasa.com/media/catalog/product/t/o/toi-thay-hoa-vang-tren-co-xanh-bia-mem-2018.jpg', 'NNA-005'),
+(42, 'Bồ Câu Không Đưa Thư', 1993, 8, 'https://cdn0.fahasa.com/media/catalog/product/i/m/image_195509_1_20701.jpg', 'NNA-006'),
+(43, 'Ngồi Khóc Trên Cây', 2013, 10, 'https://cdn0.fahasa.com/media/catalog/product/n/g/ngoi_khoc_tren_cay_tai_ban_2018.jpg', 'NNA-007'),
+
+-- === VĂN HỌC VIỆT NAM KINH ĐIỂN ===
+(44, 'Dế Mèn Phiêu Lưu Ký', 1941, 20, 'https://cdn0.fahasa.com/media/catalog/product/8/9/8935244842435.jpg', 'VH-001'),
+(45, 'Đất Rừng Phương Nam', 1957, 10, 'https://cdn0.fahasa.com/media/catalog/product/8/9/8935244874436.jpg', 'VH-002'),
+(46, 'Truyện Kiều (Tái bản)', 1820, 15, 'https://cdn0.fahasa.com/media/catalog/product/t/r/truyen-kieu-tai-ban-2023_bia-1.jpg', 'VH-003'),
+(47, 'Số Đỏ', 1936, 8, 'https://cdn0.fahasa.com/media/catalog/product/i/m/image_186076.jpg', 'VH-004'),
+(48, 'Chí Phèo (Tuyển tập Nam Cao)', 1941, 10, 'https://cdn0.fahasa.com/media/catalog/product/i/m/image_195509_1_29046.jpg', 'VH-005'),
+(49, 'Tắt Đèn', 1937, 10, 'https://cdn0.fahasa.com/media/catalog/product/i/m/image_180165.jpg', 'VH-006'),
+(50, 'Bỉ Vỏ (Nguyên Hồng)', 1938, 6, 'https://cdn0.fahasa.com/media/catalog/product/i/m/image_195509_1_26605.jpg', 'VH-007'),
+(51, 'Gió Đầu Mùa (Thạch Lam)', 1937, 8, 'https://cdn0.fahasa.com/media/catalog/product/8/9/8936067608077.jpg', 'VH-008'),
+
+-- === VĂN HỌC NƯỚC NGOÀI ===
+(52, 'Harry Potter và Hòn Đá Phù Thủy', 1997, 10, 'https://cdn0.fahasa.com/media/catalog/product/h/a/harry-potter-va-hon-da-phu-thuy-tai-ban-2024.jpg', 'NN-001'),
+(53, 'Harry Potter và Phòng Chứa Bí Mật', 1998, 9, 'https://cdn0.fahasa.com/media/catalog/product/h/a/harry-potter-va-phong-chua-bi-mat-tai-ban-2024.jpg', 'NN-002'),
+(54, 'Không Gia Đình', 1878, 12, 'https://cdn0.fahasa.com/media/catalog/product/k/h/khong-gia-dinh-bia-cung_2.jpg', 'NN-003'),
+(55, 'Hoàng Tử Bé', 1943, 18, 'https://cdn0.fahasa.com/media/catalog/product/h/o/hoang-tu-be-tai-ban-2022.jpg', 'NN-004'),
+(56, 'Sherlock Holmes Toàn Tập', 1887, 7, 'https://cdn0.fahasa.com/media/catalog/product/s/h/sherlock-holmes-toan-tap-3-tap-hop.jpg', 'NN-005'),
+(57, 'Những Cuộc Phiêu Lưu Của Tom Sawyer', 1876, 8, 'https://cdn0.fahasa.com/media/catalog/product/n/h/nhung-cuoc-phieu-luu-cua-tom-sawyer-tai-ban-2020.jpg', 'NN-006'),
+(58, 'Robinson Crusoe', 1719, 6, 'https://cdn0.fahasa.com/media/catalog/product/r/o/robinson-crusoe-tai-ban-2022.jpg', 'NN-007'),
+
+-- === TRUYỆN TRANH & GIẢI TRÍ ===
+(59, 'Doraemon - Tập 1', 2000, 25, 'https://cdn0.fahasa.com/media/catalog/product/i/m/image_240057.jpg', 'TR-001'),
+(60, 'Doraemon - Tập 2', 2000, 20, 'https://cdn0.fahasa.com/media/catalog/product/i/m/image_240058.jpg', 'TR-002'),
+(61, 'Thám Tử Lừng Danh Conan - Tập 1', 1994, 25, 'https://cdn0.fahasa.com/media/catalog/product/t/h/tham-tu-lung-danh-conan---tap-1_3.jpg', 'TR-003'),
+(62, 'Thám Tử Lừng Danh Conan - Tập 100', 2021, 15, 'https://cdn0.fahasa.com/media/catalog/product/i/m/image_232512.jpg', 'TR-004'),
+(63, 'Thần Đồng Đất Việt - Tập 1', 2002, 20, 'https://cdn0.fahasa.com/media/catalog/product/8/9/8935244833372.jpg', 'TR-005'),
+
+-- === KỸ NĂNG SỐNG & KHOA HỌC ===
+(64, 'Tuổi Trẻ Đáng Giá Bao Nhiêu?', 2016, 20, 'https://cdn0.fahasa.com/media/catalog/product/t/u/tuoi-tre-dang-gia-bao-nhieu-tai-ban-2021_1.jpg', 'KN-001'),
+(65, 'Tôi Tài Giỏi, Bạn Cũng Thế!', 2005, 15, 'https://cdn0.fahasa.com/media/catalog/product/i/m/image_195509_1_51727.jpg', 'KN-002'),
+(66, 'Đắc Nhân Tâm', 1936, 30, 'https://cdn0.fahasa.com/media/catalog/product/i/m/image_195509_1_36793.jpg', 'KN-003'),
+(67, 'Mười Vạn Câu Hỏi Vì Sao - Vũ Trụ', 2020, 12, 'https://cdn0.fahasa.com/media/catalog/product/m/u/muoi-van-cau-hoi-vi-sao---bi-an-vu-tru---b_-vuong-tron.jpg', 'KH-001'),
+(68, 'Mười Vạn Câu Hỏi Vì Sao - Động Vật', 2020, 12, 'https://cdn0.fahasa.com/media/catalog/product/m/u/muoi-van-cau-hoi-vi-sao---dong-vat.jpg', 'KH-002'),
+(69, 'Atlas Địa Lý Việt Nam', 2023, 40, 'https://cdn0.fahasa.com/media/catalog/product/a/t/atlas-dia-ly-viet-nam_1_2.jpg', 'KH-003');
+
+
+-- 5. LIÊN KẾT SÁCH - TÁC GIẢ
+INSERT INTO book_authors (book_id, author_id) VALUES
+-- Khối 6
+(1, 1), (2, 1), (3, 1), (4, 1), (5, 1), (6, 1), (7, 1),
+-- Khối 7
+(8, 1), (9, 1), (10, 1), (11, 1), (12, 1), (13, 1),
+-- Khối 8
+(14, 1), (15, 1), (16, 1), (17, 1), (18, 1), (19, 1), (20, 1),
+-- Khối 9
+(21, 1), (22, 1), (23, 1), (24, 1), (25, 1), (26, 1), (27, 1), (28, 1), (29, 1), (30, 1),
+-- Tham khảo
+(31, 15), (32, 15), (33, 15), (34, 15), (35, 15), (36, 15),
+-- NNA
+(37, 2), (38, 2), (39, 2), (40, 2), (41, 2), (42, 2), (43, 2),
+-- VH VN
+(44, 3), (45, 5), (46, 9), (47, 10), (48, 4), (49, 10), (50, 17), (51, 16),
+-- VH Nuoc Ngoai
+(52, 6), (53, 6), (54, 13), (55, 12), (56, 8), (57, 18), (58, 19),
+-- Truyen Tranh
+(59, 7), (60, 7), (61, 14), (62, 14), (63, 15),
+-- Ky Nang
+(64, 11), (65, 15), (66, 20), (67, 15), (68, 15), (69, 1);
+
+
+-- 6. LIÊN KẾT SÁCH - DANH MỤC
+INSERT INTO book_categories (book_id, category_id) VALUES
+-- SGK (1)
+(1, 1), (2, 1), (3, 1), (4, 1), (5, 1), (6, 1), (7, 1),
+(8, 1), (9, 1), (10, 1), (11, 1), (12, 1), (13, 1),
+(14, 1), (15, 1), (16, 1), (17, 1), (18, 1), (19, 1), (20, 1),
+(21, 1), (22, 1), (23, 1), (24, 1), (25, 1), (26, 1), (27, 1), (28, 1), (29, 1), (30, 1),
+-- Tham Khao (2)
+(31, 2), (32, 2), (33, 2), (34, 2), (35, 2), (36, 2),
+-- NNA (3)
+(37, 3), (38, 3), (39, 3), (40, 3), (41, 3), (42, 3), (43, 3),
+-- VH VN (3)
+(44, 3), (45, 3), (46, 3), (47, 3), (48, 3), (49, 3), (50, 3), (51, 3),
+-- VH NN (4)
+(52, 4), (53, 4), (54, 4), (55, 4), (56, 4), (57, 4), (58, 4),
+-- Truyen Tranh (5)
+(59, 5), (60, 5), (61, 5), (62, 5), (63, 5),
+-- Ky Nang (6)
+(64, 6), (65, 6), (66, 6),
+-- Khoa Hoc (7)
+(67, 7), (68, 7), (69, 7);
+
+SET FOREIGN_KEY_CHECKS = 1;

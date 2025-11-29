@@ -1,4 +1,4 @@
-import { Books } from './books';
+import { Books } from './book';
 
 describe('Books', () => {
   it('should create a Books object', () => {

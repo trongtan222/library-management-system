@@ -62,10 +62,9 @@ public interface BooksRepository extends JpaRepository<Books, Integer> {
         Pageable pageable);
 
     // === SỬA LỖI 1: GHI ĐÈ findById ĐỂ TẢI KÈM DETAILS ===
-    @Override
     @EntityGraph(attributePaths = {"authors", "categories"})
     @Query("SELECT b FROM Books b LEFT JOIN FETCH b.authors LEFT JOIN FETCH b.categories WHERE b.id = :id")
-    Optional<Books> findById(@Param("id") Integer id);
+    Optional<Books> findById(@Param("id") Long bookId);
 
     // === SỬA LỖI 2: GHI ĐÈ findTop10... ĐỂ TẢI KÈM DETAILS ===
     // (JPQL không hỗ trợ LIMIT 10, nên chúng ta dùng Pageable)
