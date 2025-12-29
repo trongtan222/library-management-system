@@ -54,4 +54,21 @@ export class ReviewService {
   approveReview(reviewId: number): Observable<Review> {
     return this.http.put<Review>(`${this.apiUrl}/admin/reviews/${reviewId}/approve`, {});
   }
+
+  deleteReview(reviewId: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/admin/reviews/${reviewId}`);
+  }
+
+  // --- My reviews ---
+  getMyReviews(): Observable<Review[]> {
+    return this.http.get<Review[]>(`${this.apiUrl}/my/reviews`);
+  }
+
+  updateMyReview(id: number, payload: { rating: number; comment?: string }): Observable<Review> {
+    return this.http.put<Review>(`${this.apiUrl}/my/reviews/${id}`, payload);
+  }
+
+  deleteMyReview(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/my/reviews/${id}`);
+  }
 }

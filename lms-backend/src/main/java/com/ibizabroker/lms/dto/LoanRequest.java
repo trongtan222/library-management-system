@@ -1,7 +1,5 @@
 package com.ibizabroker.lms.dto;
 
-import org.springframework.security.access.method.P;
-
 public class LoanRequest {
     private Integer bookId;
     private Integer memberId;

@@ -1,6 +1,8 @@
 package com.ibizabroker.lms.dto;
 
 import com.ibizabroker.lms.entity.LoanStatus;
+
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 public class LoanDetailsDto {
@@ -12,9 +14,20 @@ public class LoanDetailsDto {
     private LocalDate returnDate;
     private LoanStatus status;
 
-    // SỬA LỖI TẠI ĐÂY:
-    // Constructor này nhận vào các giá trị riêng lẻ, khớp với câu truy vấn trong LoanRepository
-    public LoanDetailsDto(Integer loanId, String bookName, String userName, LocalDate loanDate, LocalDate dueDate, LocalDate returnDate, LoanStatus status) {
+    // thông tin phạt
+    private BigDecimal fineAmount;
+    private Long overdueDays;
+
+    // Constructor khớp với câu truy vấn trong LoanRepository
+    public LoanDetailsDto(Integer loanId,
+                          String bookName,
+                          String userName,
+                          LocalDate loanDate,
+                          LocalDate dueDate,
+                          LocalDate returnDate,
+                          LoanStatus status,
+                          BigDecimal fineAmount,
+                          Long overdueDays) {
         this.loanId = loanId;
         this.bookName = bookName;
         this.userName = userName;
@@ -22,6 +35,8 @@ public class LoanDetailsDto {
         this.dueDate = dueDate;
         this.returnDate = returnDate;
         this.status = status;
+        this.fineAmount = fineAmount;
+        this.overdueDays = overdueDays;
     }
 
     // Getters
@@ -32,4 +47,6 @@ public class LoanDetailsDto {
     public LocalDate getDueDate() { return dueDate; }
     public LocalDate getReturnDate() { return returnDate; }
     public LoanStatus getStatus() { return status; }
+    public BigDecimal getFineAmount() { return fineAmount; }
+    public Long getOverdueDays() { return overdueDays; }
 }

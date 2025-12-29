@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.temporal.TemporalAdjusters;
 import java.util.HashMap;
@@ -106,6 +107,12 @@ public class AdminController {
             statusData.put(status, count);
         }
         response.put("statusDistribution", statusData);
+
+        // 3. Tổng tiền phạt (tất cả) và tổng tiền phạt chưa thanh toán
+        BigDecimal totalFines = loanRepository.getTotalFines();
+        BigDecimal totalUnpaidFines = loanRepository.getTotalUnpaidFines();
+        response.put("totalFines", totalFines);
+        response.put("totalUnpaidFines", totalUnpaidFines);
 
         return ResponseEntity.ok(response);
     }

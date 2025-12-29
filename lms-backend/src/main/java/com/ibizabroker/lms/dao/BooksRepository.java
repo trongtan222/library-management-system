@@ -30,31 +30,30 @@ public interface BooksRepository extends JpaRepository<Books, Integer> {
     
     List<Books> findByNumberOfCopiesAvailableGreaterThan(int n);
 
-    // === FIX N+1 PROBLEM: Override findAll() with EntityGraph ===
-    @Override
-    @EntityGraph(attributePaths = {"authors", "categories"})
-    List<Books> findAll();
+   // === FIX N+1 PROBLEM: Override findAll() with EntityGraph ===
+   @Override
+   @EntityGraph(attributePaths = {"authors", "categories"})
+   List<Books> findAll();
 
-    // === FIX N+1 PROBLEM: findAll with Pageable ===
-    @EntityGraph(attributePaths = {"authors", "categories"})
-    Page<Books> findAll(Pageable pageable);
+   // Paged findAll: do not fetch-join collections to avoid pagination explosion; rely on batch size
+   @Override
+   Page<Books> findAll(Pageable pageable);
 
     // (Hàm findWithFiltersAndPagination đã đúng, giữ nguyên)
-    @EntityGraph(attributePaths = {"authors", "categories"})
-    @Query(value = "SELECT DISTINCT b FROM Books b " +
-           "LEFT JOIN FETCH b.authors a " +
-           "LEFT JOIN FETCH b.categories c " +
-           "WHERE " +
-           "(:search IS NULL OR :search = '' OR LOWER(b.name) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(a.name) LIKE LOWER(CONCAT('%', :search, '%'))) AND " +
-           "(:genre IS NULL OR :genre = '' OR c.name = :genre) AND " +
-           "(:availableOnly = false OR b.numberOfCopiesAvailable > 0)",
-           countQuery = "SELECT COUNT(DISTINCT b) FROM Books b " +
-                        "LEFT JOIN b.authors a " +
-                        "LEFT JOIN b.categories c " +
-                        "WHERE " +
-                        "(:search IS NULL OR :search = '' OR LOWER(b.name) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(a.name) LIKE LOWER(CONCAT('%', :search, '%'))) AND " +
-                        "(:genre IS NULL OR :genre = '' OR c.name = :genre) AND " +
-                        "(:availableOnly = false OR b.numberOfCopiesAvailable > 0)")
+       @Query(value = "SELECT DISTINCT b FROM Books b " +
+                 "LEFT JOIN b.authors a " +
+                 "LEFT JOIN b.categories c " +
+                 "WHERE " +
+                 "(:search IS NULL OR :search = '' OR LOWER(b.name) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(a.name) LIKE LOWER(CONCAT('%', :search, '%'))) AND " +
+                 "(:genre IS NULL OR :genre = '' OR c.name = :genre) AND " +
+                 "(:availableOnly = false OR b.numberOfCopiesAvailable > 0)",
+                 countQuery = "SELECT COUNT(DISTINCT b) FROM Books b " +
+                                          "LEFT JOIN b.authors a " +
+                                          "LEFT JOIN b.categories c " +
+                                          "WHERE " +
+                                          "(:search IS NULL OR :search = '' OR LOWER(b.name) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(a.name) LIKE LOWER(CONCAT('%', :search, '%'))) AND " +
+                                          "(:genre IS NULL OR :genre = '' OR c.name = :genre) AND " +
+                                          "(:availableOnly = false OR b.numberOfCopiesAvailable > 0)")
     Page<Books> findWithFiltersAndPagination(
         @Param("search") String search,
         @Param("genre") String genre,
@@ -62,15 +61,15 @@ public interface BooksRepository extends JpaRepository<Books, Integer> {
         Pageable pageable);
 
     // === SỬA LỖI 1: GHI ĐÈ findById ĐỂ TẢI KÈM DETAILS ===
-    @EntityGraph(attributePaths = {"authors", "categories"})
-    @Query("SELECT b FROM Books b LEFT JOIN FETCH b.authors LEFT JOIN FETCH b.categories WHERE b.id = :id")
-    Optional<Books> findById(@Param("id") Long bookId);
+   @EntityGraph(attributePaths = {"authors", "categories"})
+   @Query("SELECT b FROM Books b LEFT JOIN FETCH b.authors LEFT JOIN FETCH b.categories WHERE b.id = :id")
+   Optional<Books> findById(@Param("id") Integer bookId);
 
     // === SỬA LỖI 2: GHI ĐÈ findTop10... ĐỂ TẢI KÈM DETAILS ===
     // (JPQL không hỗ trợ LIMIT 10, nên chúng ta dùng Pageable)
-    @EntityGraph(attributePaths = {"authors", "categories"})
-    @Query("SELECT b FROM Books b LEFT JOIN FETCH b.authors LEFT JOIN FETCH b.categories ORDER BY b.id DESC")
-    List<Books> findNewestBooks(Pageable pageable);
+      @EntityGraph(attributePaths = {"authors", "categories"})
+      @Query("SELECT b FROM Books b ORDER BY b.id DESC")
+      List<Books> findNewestBooks(Pageable pageable);
     
     // Xóa hàm cũ đi (hoặc để đó cũng không sao, nhưng hàm mới sẽ được dùng)
     // List<Books> findTop10ByOrderByIdDesc(); 

@@ -6,13 +6,14 @@ import { environment } from '../../environments/environment';
 export const IS_PUBLIC_API = new HttpContextToken<boolean>(() => false);
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class ApiService {
+  // Dùng một biến duy nhất cho base URL
   private baseUrl = environment.apiBaseUrl;
-  
-  // Google Books API Key (Nên để trong environment.ts, tạm để đây)
-  public readonly GOOGLE_BOOKS_API_KEY = 'AIzaSyB2Yrs1oWkbIirD3BmF2lOM7bIE9d3Zn40';
+
+  // Google Books API Key đọc từ environment (không hardcode)
+  public readonly GOOGLE_BOOKS_API_KEY = environment.googleBooksApiKey;
 
   constructor() {}
 

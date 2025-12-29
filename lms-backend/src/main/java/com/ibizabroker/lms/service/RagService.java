@@ -7,6 +7,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 @Service
 @RequiredArgsConstructor
@@ -21,16 +23,13 @@ public class RagService {
     @Transactional(readOnly = true)
     public String retrieveContext(String userQuery) {
         String queryLower = userQuery.toLowerCase();
-        
-        // Search for books matching keywords
-        List<Books> books = booksRepository.findAll().stream()
-            .filter(book -> 
-                book.getName().toLowerCase().contains(queryLower) ||
-                book.getAuthors().stream().anyMatch(a -> a.getName().toLowerCase().contains(queryLower)) ||
-                book.getCategories().stream().anyMatch(c -> c.getName().toLowerCase().contains(queryLower))
-            )
-            .limit(5)
-            .collect(Collectors.toList());
+
+        // Limit to top 5 books to keep token size small
+        Pageable topFive = PageRequest.of(0, 5);
+
+        // Use repository query to avoid N+1 and pull only needed rows
+        List<Books> books = booksRepository.findWithFiltersAndPagination(queryLower, null, false, topFive)
+            .getContent();
         
         // Format context for RAG
         if (books.isEmpty()) {
@@ -54,14 +53,17 @@ public class RagService {
      */
     public String buildAugmentedPrompt(String userQuery) {
         String context = retrieveContext(userQuery);
-        
-        return "You are a helpful library assistant for a Library Management System.\n" +
-               "Provide helpful, concise answers about books and library services.\n" +
-               "If asked about borrowing, mention users can borrow books through the system.\n" +
-               "If asked about specific books, check the library inventory below.\n\n" +
-               "=== LIBRARY CONTEXT ===\n" +
-               context + "\n" +
-               "=== USER QUESTION ===\n" +
-               userQuery;
+
+        return new StringBuilder()
+            .append("You are a helpful library assistant for a Library Management System.\n")
+            .append("Provide helpful, concise answers about books and library services.\n")
+            .append("If asked about borrowing, mention users can borrow books through the system.\n")
+            .append("If asked about specific books, check the library inventory below.\n\n")
+            .append("=== LIBRARY CONTEXT ===\n")
+            .append(context)
+            .append("\n=== USER QUESTION ===\n")
+            .append(userQuery)
+            .append("\n\nPlease answer the user's question in Vietnamese.")
+            .toString();
     }
 }

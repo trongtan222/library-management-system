@@ -10,7 +10,12 @@
         <small>Powered by AI & RAG</small>
       </div>
       <div class="header-actions">
-        <button class="btn-action" (click)="clearChat()" title="Clear chat" *ngIf="messages.length > 1">
+        <button
+          class="btn-action"
+          (click)="clearChat()"
+          title="Clear chat"
+          *ngIf="messages.length > 1"
+        >
           <i class="fas fa-trash-alt"></i>
         </button>
         <button class="btn-close" (click)="toggleChat()"></button>
@@ -18,11 +23,20 @@
     </div>
 
     <div class="chat-body" #chatBody>
-      <div *ngFor="let message of messages" class="message" [ngClass]="message.author">
+      <div
+        *ngFor="let message of messages"
+        class="message"
+        [ngClass]="message.author"
+      >
         <div class="message-content">
-          <p [innerHTML]="message.text"></p>
+          <ng-container *ngIf="message.author === 'bot'; else userMessage">
+            <markdown [data]="message.text"></markdown>
+          </ng-container>
+          <ng-template #userMessage>
+            <p>{{ message.text }}</p>
+          </ng-template>
           <small class="timestamp" *ngIf="message.timestamp">
-            {{ message.timestamp | date:'short' }}
+            {{ message.timestamp | date : "short" }}
           </small>
         </div>
       </div>
@@ -33,17 +47,32 @@
           <span></span>
         </div>
       </div>
+      <div class="quick-replies" *ngIf="messages.length === 1 && !isLoading">
+        <button
+          class="chip"
+          (click)="fillMessage('Sách Toán lớp 6 còn không?')"
+        >
+          Sách Toán lớp 6
+        </button>
+        <button class="chip" (click)="fillMessage('Thư viện mở cửa lúc nào?')">
+          Giờ mở cửa
+        </button>
+        <button class="chip" (click)="fillMessage('Hướng dẫn mượn sách')">
+          Cách mượn sách
+        </button>
+      </div>
     </div>
 
     <div class="chat-footer">
       <form (ngSubmit)="sendMessage()">
-        <input 
-          type="text" 
-          [(ngModel)]="currentMessage" 
-          name="currentMessage" 
-          placeholder="Ask about books, authors, genres..." 
+        <input
+          type="text"
+          [(ngModel)]="currentMessage"
+          name="currentMessage"
+          placeholder="Hỏi về sách, tác giả, thể loại..."
           [disabled]="isLoading"
-          autocomplete="off">
+          autocomplete="off"
+        />
         <button type="submit" [disabled]="isLoading || !currentMessage.trim()">
           <i class="fas fa-paper-plane"></i>
         </button>

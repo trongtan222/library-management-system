@@ -23,4 +23,7 @@ public interface ReviewRepository extends JpaRepository<Review, Integer> {
     
     // Lấy tất cả đánh giá, sắp xếp theo ngày tạo mới nhất
     List<Review> findAllByOrderByCreatedAtDesc();
+
+    // Lấy các đánh giá của một người dùng
+    List<Review> findByUser_UserIdOrderByCreatedAtDesc(Integer userId);
 }

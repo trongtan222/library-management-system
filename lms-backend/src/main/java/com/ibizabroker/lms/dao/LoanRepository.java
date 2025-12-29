@@ -11,6 +11,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
@@ -24,12 +25,34 @@ public interface LoanRepository extends JpaRepository<Loan, Integer> {
     List<Loan> findTop5ByOrderByLoanDateDesc();
     List<Loan> findByStatus(LoanStatus status);
 
-    @Query("SELECT new com.ibizabroker.lms.dto.LoanDetailsDto(l.id, b.name, u.name, l.loanDate, l.dueDate, l.returnDate, l.status) " +
+    @Query("SELECT new com.ibizabroker.lms.dto.LoanDetailsDto(" +
+           "l.id, b.name, u.name, l.loanDate, l.dueDate, l.returnDate, l.status, " +
+           "l.fineAmount, " +
+           "CAST(" +
+           "  CASE " +
+           "    WHEN l.returnDate IS NOT NULL AND l.returnDate > l.dueDate " +
+           "      THEN FUNCTION('DATEDIFF', l.returnDate, l.dueDate) " +
+           "    WHEN l.status = com.ibizabroker.lms.entity.LoanStatus.OVERDUE " +
+           "      THEN FUNCTION('DATEDIFF', CURRENT_DATE, l.dueDate) " +
+           "    ELSE 0 " +
+           "  END AS long" +
+           ") ) " +
            "FROM Loan l JOIN Books b ON l.bookId = b.id JOIN Users u ON l.memberId = u.userId " +
            "ORDER BY l.loanDate DESC")
     List<LoanDetailsDto> findAllLoanDetails();
 
-    @Query("SELECT new com.ibizabroker.lms.dto.LoanDetailsDto(l.id, b.name, u.name, l.loanDate, l.dueDate, l.returnDate, l.status) " +
+    @Query("SELECT new com.ibizabroker.lms.dto.LoanDetailsDto(" +
+           "l.id, b.name, u.name, l.loanDate, l.dueDate, l.returnDate, l.status, " +
+           "l.fineAmount, " +
+           "CAST(" +
+           "  CASE " +
+           "    WHEN l.returnDate IS NOT NULL AND l.returnDate > l.dueDate " +
+           "      THEN FUNCTION('DATEDIFF', l.returnDate, l.dueDate) " +
+           "    WHEN l.status = com.ibizabroker.lms.entity.LoanStatus.OVERDUE " +
+           "      THEN FUNCTION('DATEDIFF', CURRENT_DATE, l.dueDate) " +
+           "    ELSE 0 " +
+           "  END AS long" +
+           ") ) " +
            "FROM Loan l JOIN Books b ON l.bookId = b.id JOIN Users u ON l.memberId = u.userId " +
            "WHERE l.memberId = :memberId ORDER BY l.loanDate DESC")
     List<LoanDetailsDto> findLoanDetailsByMemberId(@Param("memberId") Integer memberId);
@@ -72,4 +95,12 @@ public interface LoanRepository extends JpaRepository<Loan, Integer> {
     // === Query cho Chart.js: Trạng thái đơn mượn ===
     @Query("SELECT l.status, COUNT(l) FROM Loan l GROUP BY l.status")
     List<Object[]> countLoansByStatus();
+
+       // Tổng tất cả tiền phạt đã phát sinh
+       @Query("SELECT COALESCE(SUM(l.fineAmount), 0) FROM Loan l")
+       BigDecimal getTotalFines();
+
+       // Tổng tiền phạt chưa thanh toán
+       @Query("SELECT COALESCE(SUM(l.fineAmount), 0) FROM Loan l WHERE l.fineStatus = 'UNPAID'")
+       BigDecimal getTotalUnpaidFines();
 }

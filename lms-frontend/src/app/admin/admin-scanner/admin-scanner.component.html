@@ -15,7 +15,7 @@
       </div>
 
       <zxing-scanner 
-        *ngIf="hasPermission"
+        *ngIf="hasPermission && hasDevices"
         [formats]="allowedFormats"
         (camerasFound)="onCamerasFound($event)"
         (permissionResponse)="onPermissionResponse($event)"
@@ -23,6 +23,15 @@
         [enable]="isScanning" 
         class="scanner-video">
       </zxing-scanner>
+
+      <div *ngIf="hasPermission && !hasDevices" class="p-4 text-warning">
+        <h5><i class="fa-solid fa-camera"></i> Không tìm thấy thiết bị Camera</h5>
+        <p>Vui lòng kiểm tra kết nối Camera, hoặc nhập mã thủ công bên dưới.</p>
+        <div class="input-group mt-3">
+          <input type="text" class="form-control bg-dark text-white border-secondary" [value]="manualCode" (input)="manualCode = $event.target.value" placeholder="Nhập ISBN/Barcode hoặc ID"/>
+          <button class="btn btn-primary" (click)="submitManualCode()"><i class="fa-solid fa-search"></i> Tìm</button>
+        </div>
+      </div>
 
       <div class="scanner-overlay" *ngIf="isScanning && hasPermission">
         <div class="scan-line"></div>
@@ -39,19 +48,22 @@
           <div *ngIf="isLoadingBook" class="spinner-border text-primary my-3" role="status"></div>
 
           <div *ngIf="foundBook" class="book-found-card p-3 mt-3 border border-secondary rounded bg-secondary bg-opacity-25 text-start d-flex">
-            <img [src]="foundBook?.coverUrl || 'assets/images/placeholder.png'" 
+            <img [src]="foundBook.coverUrl || 'assets/images/placeholder.png'" 
                  class="rounded me-3" style="width: 80px; height: 120px; object-fit: cover;">
             <div class="flex-grow-1">
-               <h5 class="text-info fw-bold">{{ foundBook?.name }}</h5>
+               <h5 class="text-info fw-bold">{{ foundBook.name }}</h5>
                <p class="mb-1 small">
                  <i class="fa-solid fa-pen-nib"></i> 
-                 {{ (foundBook?.authors && foundBook!.authors!.length > 0) ? foundBook!.authors![0].name : 'Unknown' }}
+                 {{ (foundBook.authors && foundBook!.authors!.length > 0) ? foundBook!.authors![0].name : 'Unknown' }}
                </p>
-               <p class="mb-1 small">ISBN: {{ foundBook?.isbn }}</p>
+               <p class="mb-1 small">ISBN: {{ foundBook.isbn }}</p>
                <div class="mt-2">
                  <button class="btn btn-warning btn-sm me-2" (click)="foundBook && navigateToEdit(foundBook.id)">
                     <i class="fa-solid fa-edit"></i> Sửa Sách
                  </button>
+                <button class="btn btn-success btn-sm" (click)="foundBook && navigateToCreateLoan(foundBook)">
+                  <i class="fa-solid fa-file-signature"></i> Tạo phiếu mượn
+                </button>
                </div>
             </div>
           </div>

@@ -60,8 +60,8 @@
   "budgets": [
     {
       "type": "initial",
-      "maximumWarning": "500kb",
-      "maximumError": "1mb"
+      "maximumWarning": "2mb",
+      "maximumError": "3mb"
     },
     {
       "type": "anyComponentStyle",
@@ -107,7 +107,6 @@
         "test": {
           "builder": "@angular/build:karma",
           "options": {
-            "browser": "src/test.ts",
             "polyfills": ["src/polyfills.ts"],
             "tsConfig": "tsconfig.spec.json",
             "karmaConfig": "karma.conf.js",

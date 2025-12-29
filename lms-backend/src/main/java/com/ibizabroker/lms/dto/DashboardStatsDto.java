@@ -6,6 +6,10 @@ public class DashboardStatsDto {
     private long activeLoans;
     private long overdueLoans;
 
+    // Tổng tiền phạt (tất cả) và tổng tiền phạt chưa thanh toán
+    private java.math.BigDecimal totalFines;
+    private java.math.BigDecimal totalUnpaidFines;
+
     // Constructors
     public DashboardStatsDto() {}
 
@@ -28,4 +32,10 @@ public class DashboardStatsDto {
 
     public long getOverdueLoans() { return overdueLoans; }
     public void setOverdueLoans(long overdueLoans) { this.overdueLoans = overdueLoans; }
+
+    public java.math.BigDecimal getTotalFines() { return totalFines; }
+    public void setTotalFines(java.math.BigDecimal totalFines) { this.totalFines = totalFines; }
+
+    public java.math.BigDecimal getTotalUnpaidFines() { return totalUnpaidFines; }
+    public void setTotalUnpaidFines(java.math.BigDecimal totalUnpaidFines) { this.totalUnpaidFines = totalUnpaidFines; }
 }

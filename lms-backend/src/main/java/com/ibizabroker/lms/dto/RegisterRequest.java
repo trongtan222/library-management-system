@@ -35,7 +35,6 @@ public class RegisterRequest {
     public String getPhoneNumber() { return phoneNumber; }
     public void setPhoneNumber(String phoneNumber) { this.phoneNumber = phoneNumber; }
     public String getEmail() {
-        // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'getEmail'");
     }
 }

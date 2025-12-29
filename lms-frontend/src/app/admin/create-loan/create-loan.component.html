@@ -27,11 +27,25 @@
           </div>
 
           <!-- Thẻ User đã chọn -->
-          <div class="selected-card p-3 rounded border border-success bg-opacity-10 bg-success" *ngIf="selectedUser">
+          <div class="selected-card p-3 rounded border border-success bg-dark text-white" *ngIf="selectedUser">
             <div class="d-flex justify-content-between align-items-center">
               <div>
                 <h5 class="mb-1 text-success">{{ selectedUser.name }}</h5>
-                <p class="mb-0 text-muted small">Username: {{ selectedUser.username }} | ID: {{ selectedUser.userId }}</p>
+                <p class="mb-0 text-white small">Username: <span class="fw-bold">{{ selectedUser.username }}</span> | ID: <span class="fw-bold">{{ selectedUser.userId }}</span></p>
+                <p class="mb-0 text-white small" *ngIf="selectedUser.email">Email: <span class="fw-bold">{{ selectedUser.email }}</span></p>
+                <p class="mb-0 text-white small">Vai trò: <span class="fw-bold">{{ selectedUser.role || (selectedUser.roles[0] || 'User') }}</span></p>
+                <div *ngIf="selectedUser.role === 'Student'">
+                  <label class="form-label text-white">Lớp học:</label>
+                  <input type="text" class="form-control form-control-sm bg-dark text-white border-secondary" [(ngModel)]="selectedUser.className" placeholder="Nhập lớp học...">
+                </div>
+                <div *ngIf="selectedUser.loanHistory?.length">
+                  <label class="form-label text-white">Lịch sử mượn gần đây:</label>
+                  <ul class="list-group list-group-flush">
+                    <li class="list-group-item bg-dark text-white border-secondary" *ngFor="let l of selectedUser.loanHistory">
+                      <span class="fw-bold">{{ l.bookName }}</span> <span class="text-info">({{ l.loanDate | date:'dd/MM/yyyy' }})</span>
+                    </li>
+                  </ul>
+                </div>
               </div>
               <button class="btn btn-outline-danger btn-sm" (click)="clearSelectedUser()">
                 <i class="fa-solid fa-times"></i> Bỏ chọn
@@ -53,13 +67,18 @@
             
             <!-- List gợi ý -->
             <div class="list-group position-absolute w-100 mt-1 shadow" style="z-index: 1000;" *ngIf="books.length > 0">
-              <button type="button" class="list-group-item list-group-item-action bg-dark text-white border-secondary"
-                      *ngFor="let b of books" (click)="selectBook(b)">
+              <button type="button"
+                      class="list-group-item list-group-item-action bg-dark text-white border-secondary book-suggestion-item"
+                      *ngFor="let b of books"
+                      (click)="selectBook(b)"
+                      [disabled]="b.numberOfCopiesAvailable === 0"
+                      [title]="b.numberOfCopiesAvailable === 0 ? 'Sách đã hết' : ''">
                 <div class="d-flex align-items-center">
                   <img [src]="b.coverUrl || 'assets/images/placeholder.png'" style="width: 30px; height: 45px; object-fit: cover;" class="me-2 rounded">
                   <div>
                     <div class="fw-bold">{{ b.name }}</div>
-                    <small class="text-muted">Còn: {{ b.numberOfCopiesAvailable }}</small>
+                    <small class="text-muted">ISBN: {{ b.isbn || 'N/A' }}</small>
+                    <div><small [ngClass]="b.numberOfCopiesAvailable > 0 ? 'text-success' : 'text-danger'">Còn: {{ b.numberOfCopiesAvailable }}</small></div>
                   </div>
                 </div>
               </button>
@@ -67,16 +86,20 @@
           </div>
 
           <!-- Thẻ Sách đã chọn -->
-          <div class="selected-card p-3 rounded border border-warning bg-opacity-10 bg-warning" *ngIf="selectedBook">
+          <div class="selected-card p-3 rounded border border-warning bg-dark text-white" *ngIf="selectedBook">
             <div class="d-flex align-items-start">
               <img [src]="selectedBook.coverUrl || 'assets/images/placeholder.png'" 
                    style="width: 60px; height: 90px; object-fit: cover;" class="me-3 rounded shadow-sm">
               <div class="flex-grow-1">
                 <h5 class="mb-1 text-warning">{{ selectedBook.name }}</h5>
-                <p class="mb-1 text-muted small">
-                  Tác giả: <span *ngFor="let a of selectedBook.authors">{{ a.name }} </span>
+                <p class="mb-1 text-white small">
+                  Tác giả: <span *ngFor="let a of selectedBook.authors" class="fw-bold text-info">{{ a.name }} </span>
                 </p>
                 <span class="badge bg-secondary">ID: {{ selectedBook.id }}</span>
+                <p class="mb-1 text-white small">Năm XB: <span class="fw-bold">{{ selectedBook.publishedYear }}</span></p>
+                <p class="mb-1 text-white small">ISBN: <span class="fw-bold">{{ selectedBook.isbn }}</span></p>
+                <p class="mb-1 text-white small">Số lượng còn: <span [ngClass]="selectedBook.numberOfCopiesAvailable > 0 ? 'text-success fw-bold' : 'text-danger fw-bold'">{{ selectedBook.numberOfCopiesAvailable }}</span></p>
+                <div *ngIf="selectedBook.numberOfCopiesAvailable === 0" class="alert alert-danger p-2 mt-2 text-white">Sách đã hết, không thể cấp!</div>
               </div>
               <button class="btn btn-outline-danger btn-sm" (click)="clearSelectedBook()">
                 <i class="fa-solid fa-times"></i>
@@ -91,7 +114,7 @@
       <!-- BƯỚC 3: CẤU HÌNH & SUBMIT -->
       <div class="row align-items-end">
         <div class="col-md-4">
-          <label class="form-label text-muted">Thời hạn mượn (Ngày)</label>
+          <label class="form-label">Thời hạn mượn (Ngày)</label>
           <select class="form-select bg-dark text-white border-secondary" [(ngModel)]="loanDays">
             <option [ngValue]="7">7 Ngày (1 tuần)</option>
             <option [ngValue]="14">14 Ngày (2 tuần)</option>
@@ -99,6 +122,9 @@
           </select>
         </div>
         <div class="col-md-8 text-end">
+          <button class="btn btn-outline-secondary btn-lg me-2" (click)="cancel()">
+            <i class="fa-solid fa-arrow-left me-2"></i> Huỷ
+          </button>
           <button class="btn btn-lg btn-success px-5" 
                   [disabled]="!selectedUser || !selectedBook || isLoading"
                   (click)="createLoan()">

@@ -35,6 +35,7 @@ export class AdminScannerComponent implements OnInit {
   scannedResult: string = '';
   foundBook: Book | null = null;
   isLoadingBook: boolean = false;
+  manualCode: string = '';
 
   constructor(
     private router: Router,
@@ -47,6 +48,9 @@ export class AdminScannerComponent implements OnInit {
 
   onCamerasFound(devices: MediaDeviceInfo[]): void {
     this.hasDevices = Boolean(devices && devices.length);
+    if (!this.hasDevices) {
+      this.toastr.info('Không tìm thấy thiết bị Camera. Bạn có thể nhập mã thủ công.', 'Thông báo');
+    }
   }
 
   onPermissionResponse(permission: boolean): void {
@@ -70,40 +74,44 @@ export class AdminScannerComponent implements OnInit {
   findBook(code: string) {
     this.isLoadingBook = true;
     this.foundBook = null;
-
-    const bookId = Number(code);
-    
-    if (!isNaN(bookId)) {
-        this.booksService.getBookById(bookId).subscribe({
-            next: (book) => this.handleBookFound(book),
-            error: () => {
-                this.searchByKeyword(code); 
-            }
-        });
-    } else {
-        this.searchByKeyword(code);
-    }
+    // Ưu tiên tìm theo ISBN/Barcode (search API)
+    this.searchByKeyword(code);
   }
 
   searchByKeyword(keyword: string) {
-     this.booksService.getPublicBooks(false, keyword, '', 0, 1).subscribe({
-         next: (page: any) => {
-             // Kiểm tra kỹ cấu trúc trả về
-             const content = page.content || page;
-             if (content && content.length > 0) {
-                 this.handleBookFound(content[0]);
-             } else {
-                 this.toastr.error('Không tìm thấy sách nào với mã này.');
-                 this.isLoadingBook = false;
-                 // Tự động quét lại sau 3 giây nếu không tìm thấy
-                 setTimeout(() => this.isScanning = true, 3000); 
-             }
-         },
-         error: () => {
-             this.toastr.error('Lỗi khi tìm kiếm sách.');
-             this.isLoadingBook = false;
-         }
-     });
+    this.booksService.getPublicBooks(false, keyword, '', 0, 5).subscribe({
+      next: (page: any) => {
+        const content = page.content || page || [];
+        if (content.length === 1) {
+          this.handleBookFound(content[0]);
+        } else if (content.length > 1) {
+          // Nếu nhiều hơn 1 kết quả, chọn kết quả đầu và báo cho admin
+          this.handleBookFound(content[0]);
+          this.toastr.info(`Có ${content.length} kết quả, đã chọn kết quả đầu tiên.`, 'Nhiều kết quả');
+        } else {
+          // Thử theo ID nếu mã là số nhỏ (tránh ISBN rất lớn)
+          const asNumber = Number(keyword);
+          if (!isNaN(asNumber) && asNumber > 0 && asNumber < 1000000) {
+            this.booksService.getBookById(asNumber).subscribe({
+              next: (book) => this.handleBookFound(book),
+              error: () => {
+                this.toastr.error('Không tìm thấy sách nào với mã này.');
+                this.isLoadingBook = false;
+                setTimeout(() => this.isScanning = true, 3000);
+              }
+            });
+          } else {
+            this.toastr.error('Không tìm thấy sách nào với mã này.');
+            this.isLoadingBook = false;
+            setTimeout(() => this.isScanning = true, 3000);
+          }
+        }
+      },
+      error: () => {
+        this.toastr.error('Lỗi khi tìm kiếm sách.');
+        this.isLoadingBook = false;
+      }
+    });
   }
 
   handleBookFound(book: Book) {
@@ -142,5 +150,19 @@ export class AdminScannerComponent implements OnInit {
 
   navigateToEdit(bookId: number): void {
       this.router.navigate(['/admin/books/edit', bookId]);
+  }
+
+  navigateToCreateLoan(book: Book): void {
+    this.router.navigate(['/admin/create-loan'], { queryParams: { bookId: book.id } });
+  }
+
+  submitManualCode(): void {
+    const code = (this.manualCode || '').trim();
+    if (!code) {
+      this.toastr.warning('Vui lòng nhập mã để tìm kiếm.');
+      return;
+    }
+    this.scannedResult = code;
+    this.findBook(code);
   }
 }

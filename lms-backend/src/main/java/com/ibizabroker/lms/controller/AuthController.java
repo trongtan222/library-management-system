@@ -2,10 +2,13 @@ package com.ibizabroker.lms.controller;
 
 import com.ibizabroker.lms.dao.RoleRepository;
 import com.ibizabroker.lms.dao.UsersRepository;
+import com.ibizabroker.lms.dto.ForgotPasswordRequest;
 import com.ibizabroker.lms.dto.RegisterRequest;
+import com.ibizabroker.lms.dto.ResetPasswordRequest;
 import com.ibizabroker.lms.entity.Role;
 import com.ibizabroker.lms.entity.Users;
 import com.ibizabroker.lms.util.JwtUtil;
+import com.ibizabroker.lms.service.PasswordResetService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus; // ⭐️ ĐÃ THÊM
 import org.springframework.http.MediaType;
@@ -35,17 +38,20 @@ public class AuthController {
     private final PasswordEncoder encoder;
     private final AuthenticationManager authManager;
     private final JwtUtil jwtUtil;
+    private final PasswordResetService passwordResetService;
 
     public AuthController(UsersRepository usersRepo,
                           RoleRepository roleRepo,
                           PasswordEncoder encoder,
                           AuthenticationManager authManager,
-                          JwtUtil jwtUtil) {
+                          JwtUtil jwtUtil,
+                          PasswordResetService passwordResetService) {
         this.usersRepo = usersRepo;
         this.roleRepo = roleRepo;
         this.encoder = encoder;
         this.authManager = authManager;
         this.jwtUtil = jwtUtil;
+        this.passwordResetService = passwordResetService;
     }
 
     // ===== REGISTER =====
@@ -122,5 +128,19 @@ public class AuthController {
         String token = jwtUtil.generateToken(principal, claims);
 
         return ResponseEntity.ok(new LoginResponse(token, u.getUserId(), u.getName(), roles));
+    }
+
+    // ===== FORGOT PASSWORD =====
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        passwordResetService.initiateReset(request.getEmail());
+        return ResponseEntity.ok(Map.of("message", "Nếu email tồn tại, hướng dẫn khôi phục đã được gửi."));
+    }
+
+    // ===== RESET PASSWORD =====
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        passwordResetService.resetPassword(request.getToken(), request.getNewPassword());
+        return ResponseEntity.ok(Map.of("message", "Đặt lại mật khẩu thành công."));
     }
 }

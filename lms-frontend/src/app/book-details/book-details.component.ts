@@ -44,14 +44,15 @@ export class BookDetailsComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.isUser = this.userAuthService.isUser();
-    const bookIdParam = this.route.snapshot.paramMap.get('id');
+    const bookIdParam = this.route.snapshot.paramMap.get('id') ?? this.route.snapshot.paramMap.get('bookId');
     const bookId = Number(bookIdParam);
 
-    if (bookId) {
+    if (bookIdParam && !isNaN(bookId)) {
       this.loadBookDetails(bookId);
       this.loadReviewsAndCheckPermission(bookId);
     } else {
-      this.toastr.error("Không tìm thấy ID sách.", "Lỗi");
+      this.errorMessage = "Không tìm thấy ID sách.";
+      this.toastr.error(this.errorMessage, "Lỗi");
       this.isLoading = false;
     }
   }
@@ -71,20 +72,17 @@ export class BookDetailsComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (data: Book) => {
           this.book = data;
-          
-          // Nếu chưa có ảnh bìa, tìm từ Google Books
           if (this.book && !this.book.coverUrl) {
             this.findAndSaveCover(this.book);
           }
-
-          // <--- MỚI: Nếu là User, kiểm tra xem sách này đã thích chưa
           if (this.isUser && this.book) {
             this.checkWishlistStatus(this.book.id);
           }
         },
         error: (err) => {
-          this.toastr.error('Không thể tải chi tiết sách.', 'Lỗi');
-          console.error(err);
+          this.errorMessage = err?.error?.message || 'Không thể tải chi tiết sách.';
+          this.toastr.error(this.errorMessage, 'Lỗi');
+          this.book = null;
         }
       });
   }

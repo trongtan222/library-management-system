@@ -1,5 +1,6 @@
 package com.ibizabroker.lms.configuration;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -17,11 +18,11 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.client.RestTemplate; // ✅ Thêm import này
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.util.Arrays;
 import java.util.List;
 
 @Configuration
@@ -32,6 +33,9 @@ public class WebSecurityConfiguration {
     private final JwtRequestFilter jwtRequestFilter;
     private final JwtAuthenticationEntryPoint authenticationEntryPoint;
     private final UserDetailsService userDetailsService;
+
+    @Value("${allowed.origins:http://localhost:4200}")
+    private String allowedOrigins;
 
     public WebSecurityConfiguration(JwtRequestFilter jwtRequestFilter,
                                     JwtAuthenticationEntryPoint authenticationEntryPoint,
@@ -46,10 +50,9 @@ public class WebSecurityConfiguration {
 
     @Bean
     public AuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider p = new DaoAuthenticationProvider();
-        p.setUserDetailsService(userDetailsService);
-        p.setPasswordEncoder(passwordEncoder());
-        return p;
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider(userDetailsService);
+        provider.setPasswordEncoder(passwordEncoder());
+        return provider;
     }
 
     @Bean
@@ -57,16 +60,16 @@ public class WebSecurityConfiguration {
         return config.getAuthenticationManager();
     }
 
-    // ✅ THÊM BEAN RESTTEMPLATE (Bắt buộc cho ChatbotController)
-    @Bean
-    public RestTemplate restTemplate() {
-        return new RestTemplate();
-    }
+    // RestTemplate bean is provided in HttpClientConfig with timeouts
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration c = new CorsConfiguration();
-        c.setAllowedOrigins(List.of("http://localhost:4200"));
+        List<String> origins = Arrays.stream(allowedOrigins.split(","))
+            .map(String::trim)
+            .filter(s -> !s.isEmpty())
+            .toList();
+        c.setAllowedOriginPatterns(origins);
         c.setAllowedMethods(List.of("GET","POST","PUT","PATCH","DELETE","OPTIONS"));
         c.setAllowedHeaders(List.of("*"));
         c.setAllowCredentials(true);

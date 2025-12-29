@@ -69,8 +69,11 @@
             <button *ngIf="isUser" class="btn btn-primary px-4" (click)="navigateToBorrow()" [disabled]="book.numberOfCopiesAvailable === 0">
                 <i class="fa-solid fa-cart-plus me-2"></i> Mượn Sách Này
             </button>
-            
-            </div>
+            <button *ngIf="isUser" class="btn btn-outline-danger px-4" (click)="toggleWishlist()">
+                <i class="fa-heart me-2" [ngClass]="book.isWishlisted ? 'fa-solid text-danger' : 'fa-regular'"></i>
+                {{ book.isWishlisted ? 'Đã yêu thích' : 'Thêm vào yêu thích' }}
+            </button>
+          </div>
         </div>
       </div>
     </div>

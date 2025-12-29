@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 // SỬA
@@ -14,7 +14,7 @@ import { catchError, map } from 'rxjs/operators';
     styleUrls: ['./home.component.css'],
     standalone: false
 })
-export class HomeComponent implements OnInit {
+export class HomeComponent implements OnInit, OnDestroy {
 
   searchTerm: string = '';
   
@@ -36,6 +36,9 @@ export class HomeComponent implements OnInit {
   // SỬA
   newestBooks$!: Observable<Book[]>;
 
+  currentTime: string = '';
+  private timeIntervalId: any;
+
   constructor(
     public userAuthService: UserAuthService,
     private booksService: BooksService,
@@ -43,6 +46,9 @@ export class HomeComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
+    this.updateCurrentTime();
+    this.timeIntervalId = setInterval(() => this.updateCurrentTime(), 1000);
+
     this.newestBooks$ = this.booksService.getNewestBooks().pipe(
       map((data: any[]) => (data || []).map(b => ({
           id: b.id,
@@ -60,6 +66,19 @@ export class HomeComponent implements OnInit {
         return of([]);
       })
     );
+  }
+
+  ngOnDestroy(): void {
+    if (this.timeIntervalId) {
+      clearInterval(this.timeIntervalId);
+    }
+  }
+
+  private updateCurrentTime(): void {
+    const now = new Date();
+    const weekday = now.toLocaleDateString('vi-VN', { weekday: 'long' });
+    const date = now.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    this.currentTime = `${weekday}, ${date}`;
   }
 
   searchBooks(): void {

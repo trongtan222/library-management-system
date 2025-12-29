@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.persistence.*;
 import java.util.HashSet;
 import java.util.Set;
+import org.hibernate.annotations.BatchSize;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Entity
@@ -19,8 +20,8 @@ public class Books {
     @JsonAlias({"bookName"})
     private String name;
 
-    // --- THAY ĐỔI 1: Đổi LAZY thành EAGER ---
-    @ManyToMany(fetch = FetchType.EAGER) // <-- SỬA DÒNG NÀY
+    @ManyToMany(fetch = FetchType.LAZY)
+    @BatchSize(size = 20)
     @JoinTable(
         name = "book_authors",
         joinColumns = @JoinColumn(name = "book_id"),
@@ -29,8 +30,8 @@ public class Books {
     private Set<Author> authors = new HashSet<>();
 
 
-    // --- THAY ĐỔI 2: Đổi LAZY thành EAGER ---
-    @ManyToMany(fetch = FetchType.EAGER) // <-- SỬA DÒNG NÀY
+    @ManyToMany(fetch = FetchType.LAZY)
+    @BatchSize(size = 20)
     @JoinTable(
         name = "book_categories",
         joinColumns = @JoinColumn(name = "book_id"),

@@ -2,6 +2,7 @@ package com.ibizabroker.lms.service;
 
 import com.ibizabroker.lms.dao.RoleRepository;
 import com.ibizabroker.lms.dao.UsersRepository;
+import com.ibizabroker.lms.dto.ChangePasswordRequest;
 import com.ibizabroker.lms.dto.UserCreateDto;
 import com.ibizabroker.lms.dto.UserDto;
 import com.ibizabroker.lms.dto.UserUpdateDto;
@@ -85,6 +86,14 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(newPassword));
         usersRepository.save(user);
         return Map.of("newPassword", newPassword);
+    }
+
+    public void changeOwnPassword(Users user, ChangePasswordRequest request) {
+        if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
+            throw new IllegalArgumentException("Mật khẩu cũ không chính xác");
+        }
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        usersRepository.save(user);
     }
 
     // --- Helper Methods ---

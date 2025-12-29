@@ -13,6 +13,7 @@
         Khơi nguồn tri thức - Thắp sáng ước mơ. <br>
         Nơi các em tìm thấy những cuốn sách hay phục vụ học tập và giải trí.
       </p>
+      <p class="current-time">Hôm nay: {{ currentTime }}</p>
       <form (ngSubmit)="searchBooks()" class="search-form">
         <i class="fa-solid fa-magnifying-glass search-icon"></i>
         <input [(ngModel)]="searchTerm" name="searchTerm" type="search" placeholder="Nhập tên sách, tác giả hoặc môn học...">
@@ -25,7 +26,7 @@
         </a>
         <a *ngIf="userAuthService.isAdmin()" class="btn btn-secondary" routerLink="/create-book">
           <i class="fa-solid fa-plus"></i>
-          <span>Quản Lý Sách</span>
+          <span>Thêm Sách Mới</span>
         </a>
       </div>
     </div>
@@ -97,7 +98,7 @@
         <nav class="footer-nav-vertical">
           <a routerLink="/borrow-book">Tra cứu sách</a>
           <a routerLink="/my-account">Tài khoản của tôi</a>
-          <a href="#">Nội quy thư viện</a>
+          <a routerLink="/rules">Nội quy thư viện</a> 
           <a href="#">Lịch hoạt động</a>
         </nav>
       </div>

@@ -31,10 +31,10 @@ public class BookService {
     }
     
     @Transactional(readOnly = true)
-    public Books getBookById(Integer id) {
-         return booksRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Book with id " + id + " does not exist."));
-    }
+        public Books getBookById(Integer id) {
+            return booksRepository.findById(id)
+                 .orElseThrow(() -> new NotFoundException("Book with id " + id + " does not exist."));
+        }
     
     @Transactional(readOnly = true)
     public List<Author> getAllAuthors() {

@@ -6,4 +6,7 @@ export class User {
     email?: string;
     password?: string;
     roles: string[];
+    role?: string; // Vai trò chính (admin, user, ...)
+    className?: string; // Lớp học của user (nếu là học sinh)
+    loanHistory?: any[]; // Lịch sử mượn sách (có thể là Borrow[] hoặc object)
 }

@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { Router, ActivatedRoute } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
@@ -34,12 +35,26 @@ export class CreateLoanComponent implements OnInit {
     private usersService: UsersService,
     private booksService: BooksService,
     private circulationService: CirculationService,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private router: Router,
+    private route: ActivatedRoute
   ) {}
 
   ngOnInit(): void {
     // Load danh sách user ban đầu (nếu cần) hoặc để trống chờ search
     this.searchUsers();
+
+    // Nhận bookId từ query params (từ scanner)
+    this.route.queryParams.subscribe(params => {
+      const bookId = Number(params['bookId']);
+      if (!isNaN(bookId) && bookId > 0) {
+        this.booksService.getBookById(bookId).subscribe({
+          next: (book) => {
+            this.selectBook(book);
+          }
+        });
+      }
+    });
   }
 
   // --- USER SEARCH ---
@@ -71,6 +86,19 @@ export class CreateLoanComponent implements OnInit {
     this.selectedUser = user;
     this.users = []; // Ẩn danh sách gợi ý
     this.userSearchTerm = '';
+    // Lấy lịch sử mượn cho user này
+    this.circulationService.getLoansByMemberId(user.userId).subscribe({
+      next: (loans) => {
+        // Chỉ lấy 5 loan gần nhất, map sang dạng đơn giản cho UI
+        this.selectedUser!.loanHistory = loans.slice(0, 5).map(l => ({
+          bookName: l.bookName,
+          loanDate: l.loanDate
+        }));
+      },
+      error: () => {
+        this.selectedUser!.loanHistory = [];
+      }
+    });
   }
 
   clearSelectedUser() {
@@ -110,14 +138,18 @@ export class CreateLoanComponent implements OnInit {
       return;
     }
 
+    if (this.selectedBook.numberOfCopiesAvailable === 0) {
+      this.toastr.error('Sách đã hết, không thể cấp!');
+      return;
+    }
+
     this.isLoading = true;
     const payload = {
       bookId: this.selectedBook.id,
       memberId: this.selectedUser.userId,
       loanDays: this.loanDays,
-      // Admin tạo thì có thể lấy tên/lớp từ User object nếu cần lưu history
       studentName: this.selectedUser.name,
-      studentClass: '' // Hoặc thêm trường nhập lớp nếu muốn
+      studentClass: this.selectedUser.className || ''
     };
 
     this.circulationService.loan(payload).subscribe({
@@ -129,7 +161,7 @@ export class CreateLoanComponent implements OnInit {
         this.toastr.error(err.error?.message || 'Tạo phiếu mượn thất bại.');
         this.isLoading = false;
       },
-      complete: () => this.isLoading = false
+      complete: () => { this.isLoading = false; }
     });
   }
 
@@ -138,5 +170,9 @@ export class CreateLoanComponent implements OnInit {
     this.selectedUser = null;
     this.loanDays = 14;
     this.isLoading = false;
+  }
+
+  cancel() {
+    this.router.navigate(['/admin/loans']);
   }
 }

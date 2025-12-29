@@ -1,6 +1,12 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
-import { HTTP_INTERCEPTORS, provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
+import { MarkdownModule } from 'ngx-markdown';
+import { SecurityContext } from '@angular/core';
+import {
+  HTTP_INTERCEPTORS,
+  provideHttpClient,
+  withInterceptorsFromDi,
+} from '@angular/common/http';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { BooksListComponent } from './books-list/books-list.component';
@@ -32,7 +38,12 @@ import { LoanManagementComponent } from './admin/loan-management/loan-management
 import { MyAccountComponent } from './my-account/my-account.component';
 import { ManageFinesComponent } from './admin/manage-fines/manage-fines.component';
 import { ReportsComponent } from './admin/reports/reports.component';
-import { CommonModule } from '@angular/common';
+import {
+  CommonModule,
+  DatePipe,
+  CurrencyPipe,
+  UpperCasePipe,
+} from '@angular/common';
 import { ToastrModule } from 'ngx-toastr';
 import { ManageReviewsComponent } from './admin/manage-reviews/manage-reviews.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
@@ -42,6 +53,10 @@ import { CreateLoanComponent } from './admin/create-loan/create-loan.component';
 // Import thư viện QR và Scanner
 import { ZXingScannerModule } from '@zxing/ngx-scanner';
 import { QRCodeComponent } from 'angularx-qrcode';
+import { ForgotPasswordComponent } from './forgot-password/forgot-password.component';
+import { ResetPasswordComponent } from './reset-password/reset-password.component';
+import { AdminSettingsComponent } from './admin/admin-settings/admin-settings.component';
+import { RenewalsComponent } from './admin/renewals/renewals.component';
 
 @NgModule({
   declarations: [
@@ -70,6 +85,10 @@ import { QRCodeComponent } from 'angularx-qrcode';
     CreateUserComponent,
     CreateLoanComponent,
     ChatbotComponent,
+    ForgotPasswordComponent,
+    ResetPasswordComponent,
+    AdminSettingsComponent,
+    RenewalsComponent,
   ],
   imports: [
     BrowserModule,
@@ -78,36 +97,42 @@ import { QRCodeComponent } from 'angularx-qrcode';
     RouterModule,
     BrowserAnimationsModule,
     CommonModule,
+    DatePipe,
+    CurrencyPipe,
+    UpperCasePipe,
     ToastrModule.forRoot({
       timeOut: 3000,
       positionClass: 'toast-bottom-right',
       preventDuplicates: true,
     }),
     ZXingScannerModule,
-    QRCodeComponent
+    QRCodeComponent,
+    MarkdownModule.forRoot({
+      sanitize: SecurityContext.HTML,
+    }),
   ],
   providers: [
     AuthGuard,
     {
       provide: HTTP_INTERCEPTORS,
       useClass: AuthInterceptor,
-      multi: true
+      multi: true,
     },
     {
       provide: HTTP_INTERCEPTORS,
       useClass: ErrorInterceptor,
-      multi: true
+      multi: true,
     },
     {
       provide: HTTP_INTERCEPTORS,
       useClass: LoadingInterceptor,
-      multi: true
+      multi: true,
     },
     UsersService,
     BooksService,
     UserAuthService,
-    provideHttpClient(withInterceptorsFromDi())
+    provideHttpClient(withInterceptorsFromDi()),
   ],
-  bootstrap: [AppComponent]
+  bootstrap: [AppComponent],
 })
-export class AppModule { }
+export class AppModule {}

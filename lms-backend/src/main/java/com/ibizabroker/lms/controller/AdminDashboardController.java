@@ -33,6 +33,10 @@ public class AdminDashboardController {
         long overdueLoansCount = loanRepository.countByStatus(LoanStatus.OVERDUE);
         DashboardStatsDto stats = new DashboardStatsDto(totalBooks, totalUsers, activeLoans, overdueLoansCount);
 
+        // Thêm thống kê tiền phạt
+        stats.setTotalFines(loanRepository.getTotalFines());
+        stats.setTotalUnpaidFines(loanRepository.getTotalUnpaidFines());
+
         // Tạo đối tượng chi tiết
         DashboardDetailsDto details = new DashboardDetailsDto();
         details.setStats(stats);

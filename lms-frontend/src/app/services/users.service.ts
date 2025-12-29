@@ -44,6 +44,30 @@ export class UsersService {
     );
   }
 
+  public requestPasswordReset(email: string): Observable<any> {
+    return this.http.post(
+      this.apiService.buildUrl('/auth/forgot-password'),
+      { email },
+      { context: new HttpContext().set(IS_PUBLIC_API, true) }
+    );
+  }
+
+  public confirmPasswordReset(payload: { token: string; newPassword: string }): Observable<any> {
+    return this.http.post(
+      this.apiService.buildUrl('/auth/reset-password'),
+      payload,
+      { context: new HttpContext().set(IS_PUBLIC_API, true) }
+    );
+  }
+
+  // ---------- ACCOUNT ----------
+  public changePassword(payload: { oldPassword: string; newPassword: string }): Observable<any> {
+    return this.http.put(
+      this.apiService.buildUrl('/account/password'),
+      payload
+    );
+  }
+
   // ---------- ROLE HANDLING ----------
 
   private getNormalizedRoles(): string[] {

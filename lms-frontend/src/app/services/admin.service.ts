@@ -11,6 +11,8 @@ export interface DashboardStats {
   totalUsers: number;
   activeLoans: number;
   overdueLoans: number;
+  totalFines?: number;
+  totalUnpaidFines?: number;
 }
 
 export interface DashboardDetails {
@@ -22,13 +24,16 @@ export interface DashboardDetails {
 }
 
 export interface LoanDetails {
-    loanId: number;
-    bookName: string;
-    userName: string;
-    loanDate: string;
-    dueDate: string;
-    returnDate?: string;
-    status: 'ACTIVE' | 'RETURNED' | 'OVERDUE';
+  loanId: number;
+  bookId?: number;
+  bookName: string;
+  userName: string;
+  loanDate: string;
+  dueDate: string;
+  returnDate?: string;
+  status: 'ACTIVE' | 'RETURNED' | 'OVERDUE';
+  fineAmount?: number;
+  overdueDays?: number;
 }
 
 export interface FineDetails {
@@ -45,6 +50,17 @@ export interface ReportSummary {
   loansByMonth: { month: string; count: number }[];
   mostLoanedBooks: { bookName: string; loanCount: number }[];
   finesByMonth: { month: string; totalFines: number }[];
+}
+
+export interface RenewalRequestDto {
+  id: number;
+  loanId: number;
+  memberId: number;
+  extraDays: number;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  createdAt: string;
+  decidedAt?: string;
+  adminNote?: string;
 }
 
 @Injectable({
@@ -75,5 +91,28 @@ export class AdminService {
   public getReportSummary(start: string, end: string): Observable<ReportSummary> {
     const params = { start, end };
     return this.http.get<ReportSummary>(`${this.API_URL}/reports/summary`, { params });
+  }
+
+  // ---------- SETTINGS ----------
+  public getSettings(): Observable<Array<{ id: number; key: string; value: string }>> {
+    return this.http.get<Array<{ id: number; key: string; value: string }>>(`${this.API_URL}/settings`);
+  }
+
+  public updateSetting(key: string, value: string): Observable<{ id: number; key: string; value: string }> {
+    return this.http.put<{ id: number; key: string; value: string }>(`${this.API_URL}/settings/${encodeURIComponent(key)}`, { value });
+  }
+
+  // ---------- RENEWALS ----------
+  public listRenewals(status?: 'PENDING' | 'APPROVED' | 'REJECTED'): Observable<RenewalRequestDto[]> {
+    const url = status ? `${environment.apiBaseUrl}/admin/renewals?status=${status}` : `${environment.apiBaseUrl}/admin/renewals`;
+    return this.http.get<RenewalRequestDto[]>(url);
+  }
+
+  public approveRenewal(id: number, note?: string): Observable<RenewalRequestDto> {
+    return this.http.post<RenewalRequestDto>(`${environment.apiBaseUrl}/admin/renewals/${id}/approve`, { note });
+  }
+
+  public rejectRenewal(id: number, note?: string): Observable<RenewalRequestDto> {
+    return this.http.post<RenewalRequestDto>(`${environment.apiBaseUrl}/admin/renewals/${id}/reject`, { note });
   }
 }

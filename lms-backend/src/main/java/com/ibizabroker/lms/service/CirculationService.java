@@ -3,6 +3,7 @@ package com.ibizabroker.lms.service;
 import com.ibizabroker.lms.dao.BooksRepository;
 import com.ibizabroker.lms.dao.LoanRepository;
 import com.ibizabroker.lms.dao.ReservationRepository;
+import com.ibizabroker.lms.dao.RenewalRequestRepository;
 import com.ibizabroker.lms.dto.LoanRequest;
 import com.ibizabroker.lms.dto.RenewRequest;
 import com.ibizabroker.lms.dto.ReservationRequest;
@@ -22,10 +23,11 @@ public class CirculationService {
     private final BooksRepository booksRepo;
     private final LoanRepository loanRepo;
     private final ReservationRepository reservationRepo;
-    private static final BigDecimal FINE_PER_DAY = new BigDecimal("2000"); // 2,000 VND
+    private final RenewalRequestRepository renewalRepo;
+    private final SystemSettingService systemSettingService;
 
-    public CirculationService(BooksRepository b, LoanRepository l, ReservationRepository r){
-        this.booksRepo=b; this.loanRepo=l; this.reservationRepo=r;
+    public CirculationService(BooksRepository b, LoanRepository l, ReservationRepository r, SystemSettingService settings, RenewalRequestRepository renewalRepo){
+        this.booksRepo=b; this.loanRepo=l; this.reservationRepo=r; this.systemSettingService = settings; this.renewalRepo = renewalRepo;
     }
 
     @Transactional
@@ -51,7 +53,8 @@ public class CirculationService {
             loan.setBookId(req.getBookId());
             loan.setMemberId(req.getMemberId());
             loan.setLoanDate(today);
-            loan.setDueDate(today.plusDays(req.getLoanDays() != null ? req.getLoanDays() : 14));
+            int defaultDays = systemSettingService.getInt(SystemSettingService.KEY_LOAN_MAX_DAYS, 14);
+            loan.setDueDate(today.plusDays(req.getLoanDays() != null ? req.getLoanDays() : defaultDays));
             loan.setStatus(LoanStatus.ACTIVE);
             loan.setFineStatus("NO_FINE");
             
@@ -82,7 +85,8 @@ public class CirculationService {
         if (returnDate.isAfter(loan.getDueDate())) {
             long overdueDays = ChronoUnit.DAYS.between(loan.getDueDate(), returnDate);
             if (overdueDays > 0) {
-                BigDecimal totalFine = FINE_PER_DAY.multiply(BigDecimal.valueOf(overdueDays));
+                BigDecimal finePerDay = systemSettingService.getBigDecimal(SystemSettingService.KEY_FINE_PER_DAY, new BigDecimal("2000"));
+                BigDecimal totalFine = finePerDay.multiply(BigDecimal.valueOf(overdueDays));
                 loan.setFineAmount(totalFine);
                 loan.setFineStatus("UNPAID");
             }
@@ -96,15 +100,55 @@ public class CirculationService {
     public Loan renewLoan(RenewRequest req){
         Loan loan = loanRepo.findById(req.getLoanId()).orElseThrow(() -> new NotFoundException("Loan not found"));
         if(loan.getStatus() != LoanStatus.ACTIVE) throw new IllegalStateException("Loan is not active.");
-        
         boolean isReservedByOthers = reservationRepo.existsByBookIdAndStatusAndMemberIdNot(
             loan.getBookId(), ReservationStatus.ACTIVE, loan.getMemberId());
-
         if(isReservedByOthers) throw new IllegalStateException("Book is reserved by another member; cannot renew.");
-        
         int extra = req.getExtraDays()!=null?req.getExtraDays():7;
         loan.setDueDate(loan.getDueDate().plusDays(extra));
         return loanRepo.save(loan);
+    }
+
+    @Transactional
+    public RenewalRequest requestRenewal(RenewRequest req, Integer memberId){
+        Loan loan = loanRepo.findById(req.getLoanId()).orElseThrow(() -> new NotFoundException("Loan not found"));
+        if(!loan.getMemberId().equals(memberId)) throw new IllegalStateException("Không thể yêu cầu gia hạn cho khoản mượn của người khác");
+        // Ngăn tạo trùng yêu cầu PENDING cho cùng loan
+        RenewalRequest existing = renewalRepo.findFirstByLoanIdAndStatus(loan.getId(), RenewalStatus.PENDING);
+        if(existing != null) throw new IllegalStateException("Đã có yêu cầu gia hạn đang chờ xử lý cho khoản mượn này");
+        RenewalRequest rr = new RenewalRequest();
+        rr.setLoanId(loan.getId());
+        rr.setMemberId(memberId);
+        rr.setExtraDays(req.getExtraDays()!=null?req.getExtraDays():7);
+        rr.setStatus(RenewalStatus.PENDING);
+        rr.setCreatedAt(LocalDateTime.now());
+        return renewalRepo.save(rr);
+    }
+
+    @Transactional
+    public Loan approveRenewal(Long requestId, String note){
+        RenewalRequest rr = renewalRepo.findById(requestId).orElseThrow(() -> new NotFoundException("Renewal request not found"));
+        if(rr.getStatus()!=RenewalStatus.PENDING) throw new IllegalStateException("Request already decided");
+        Loan loan = loanRepo.findById(rr.getLoanId()).orElseThrow(() -> new NotFoundException("Loan not found"));
+        boolean isReservedByOthers = reservationRepo.existsByBookIdAndStatusAndMemberIdNot(
+            loan.getBookId(), ReservationStatus.ACTIVE, loan.getMemberId());
+        if(isReservedByOthers) throw new IllegalStateException("Book is reserved by another member; cannot renew.");
+        int extra = rr.getExtraDays()!=null?rr.getExtraDays():7;
+        loan.setDueDate(loan.getDueDate().plusDays(extra));
+        rr.setStatus(RenewalStatus.APPROVED);
+        rr.setDecidedAt(LocalDateTime.now());
+        rr.setAdminNote(note);
+        renewalRepo.save(rr);
+        return loanRepo.save(loan);
+    }
+
+    @Transactional
+    public RenewalRequest rejectRenewal(Long requestId, String note){
+        RenewalRequest rr = renewalRepo.findById(requestId).orElseThrow(() -> new NotFoundException("Renewal request not found"));
+        if(rr.getStatus()!=RenewalStatus.PENDING) throw new IllegalStateException("Request already decided");
+        rr.setStatus(RenewalStatus.REJECTED);
+        rr.setDecidedAt(LocalDateTime.now());
+        rr.setAdminNote(note);
+        return renewalRepo.save(rr);
     }
 
     @Transactional
@@ -146,5 +190,10 @@ public class CirculationService {
     @Transactional(readOnly = true)
     public List<Reservation> findReservations(Integer memberId) {
         return reservationRepo.findByMemberIdAndStatus(memberId, ReservationStatus.ACTIVE);
+    }
+
+    @Transactional(readOnly = true)
+    public List<RenewalRequest> findRenewalsByMember(Integer memberId){
+        return renewalRepo.findByMemberId(memberId);
     }
 }

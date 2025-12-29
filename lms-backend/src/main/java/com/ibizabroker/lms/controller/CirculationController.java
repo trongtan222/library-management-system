@@ -6,7 +6,9 @@ import com.ibizabroker.lms.dto.FineDetailsDto;
 import com.ibizabroker.lms.dto.LoanDetailsDto;
 import com.ibizabroker.lms.dto.LoanRequest;
 import com.ibizabroker.lms.dto.RenewRequest;
+import com.ibizabroker.lms.entity.RenewalRequest;
 import com.ibizabroker.lms.dto.ReservationRequest;
+import com.ibizabroker.lms.dto.ReturnLoanResponseDto;
 import com.ibizabroker.lms.entity.Loan;
 import com.ibizabroker.lms.entity.Reservation;
 import com.ibizabroker.lms.entity.Users;
@@ -39,13 +41,36 @@ public class CirculationController {
     }
 
     @PutMapping("/loans/{id}/return")
-    public ResponseEntity<Loan> returnLoan(@PathVariable Integer id) {
-        return ResponseEntity.ok(service.returnBook(id));
+    public ResponseEntity<ReturnLoanResponseDto> returnLoan(@PathVariable Integer id) {
+        Loan loan = service.returnBook(id);
+
+        Long overdueDays = 0L;
+        if (loan.getReturnDate() != null && loan.getDueDate() != null && loan.getReturnDate().isAfter(loan.getDueDate())) {
+            overdueDays = java.time.temporal.ChronoUnit.DAYS.between(loan.getDueDate(), loan.getReturnDate());
+        }
+
+        ReturnLoanResponseDto dto = new ReturnLoanResponseDto(
+                loan.getId(),
+                loan.getBookId(),
+                loan.getMemberId(),
+                loan.getLoanDate(),
+                loan.getDueDate(),
+                loan.getReturnDate(),
+                loan.getStatus(),
+                loan.getFineAmount(),
+                overdueDays
+        );
+
+        return ResponseEntity.ok(dto);
     }
 
     @PutMapping("/loans/renew")
-    public ResponseEntity<Loan> renew(@RequestBody RenewRequest req) {
-        return ResponseEntity.ok(service.renewLoan(req));
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<RenewalRequest> renew(@RequestBody RenewRequest req, @AuthenticationPrincipal UserDetails userDetails) {
+        Users currentUser = usersRepository.findByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new NotFoundException("User not found from token"));
+        RenewalRequest created = service.requestRenewal(req, currentUser.getUserId());
+        return ResponseEntity.accepted().body(created);
     }
 
     @GetMapping("/loans")
@@ -98,5 +123,14 @@ public class CirculationController {
         // Lấy danh sách phí phạt dựa trên ID người dùng đã được xác thực
         List<FineDetailsDto> fines = loanRepository.findUnpaidFineDetailsByMemberId(currentUser.getUserId());
         return ResponseEntity.ok(fines);
+    }
+
+    // ---------- MY RENEWAL REQUESTS ----------
+    @GetMapping("/my-renewals")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<List<RenewalRequest>> getMyRenewals(@AuthenticationPrincipal UserDetails userDetails) {
+        Users currentUser = usersRepository.findByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new NotFoundException("User not found for token"));
+        return ResponseEntity.ok(service.findRenewalsByMember(currentUser.getUserId()));
     }
 }

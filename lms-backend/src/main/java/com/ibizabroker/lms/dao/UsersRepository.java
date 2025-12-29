@@ -30,4 +30,6 @@ public interface UsersRepository extends JpaRepository<Users, Integer> {
     boolean existsByUsername(String username);
 
     boolean existsByUsernameIgnoreCase(String username);
+
+       Optional<Users> findByEmailIgnoreCase(String email);
 }

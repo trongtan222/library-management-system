@@ -3,6 +3,7 @@ import { HttpClient, HttpParams, HttpContext } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Book, Author, Category } from '../models/book';
 import { ApiService, IS_PUBLIC_API } from './api.service';
+import { map } from 'rxjs/operators';
 
 export interface Page<T> {
   content: T[];
@@ -16,6 +17,9 @@ export interface Page<T> {
   providedIn: 'root'
 })
 export class BooksService {
+  getBooksList() {
+    throw new Error('Method not implemented.');
+  }
   
   constructor(
     private http: HttpClient,
@@ -78,5 +82,50 @@ export class BooksService {
 
   public getAllCategories(): Observable<Category[]> {
     return this.http.get<Category[]>(this.apiService.buildUrl('/admin/books/categories'));
+  }
+
+  public createCategory(name: string): Observable<Category> {
+    return this.http.post<Category>(this.apiService.buildUrl('/admin/books/categories'), { name });
+  }
+
+  public createAuthor(name: string): Observable<Author> {
+    return this.http.post<Author>(this.apiService.buildUrl('/admin/books/authors'), { name });
+  }
+
+  public updateCategory(id: number, name: string): Observable<Category> {
+    return this.http.put<Category>(this.apiService.buildUrl(`/admin/books/categories/${id}`), { name });
+  }
+
+  public deleteCategory(id: number): Observable<void> {
+    return this.http.delete<void>(this.apiService.buildUrl(`/admin/books/categories/${id}`));
+  }
+
+  public updateAuthor(id: number, name: string): Observable<Author> {
+    return this.http.put<Author>(this.apiService.buildUrl(`/admin/books/authors/${id}`), { name });
+  }
+
+  public deleteAuthor(id: number): Observable<void> {
+    return this.http.delete<void>(this.apiService.buildUrl(`/admin/books/authors/${id}`));
+  }
+
+  // --- IMPORT/EXPORT ---
+  public importBooks(file: File): Observable<void> {
+    const form = new FormData();
+    form.append('file', file);
+    return this.http.post<void>(this.apiService.buildUrl('/admin/import/books'), form);
+  }
+
+  public importUsers(file: File): Observable<void> {
+    const form = new FormData();
+    form.append('file', file);
+    return this.http.post<void>(this.apiService.buildUrl('/admin/import/users'), form);
+  }
+
+  public exportBooks(): Observable<Blob> {
+    return this.http.get(this.apiService.buildUrl('/admin/export/books'), { responseType: 'blob' });
+  }
+
+  public exportUsers(): Observable<Blob> {
+    return this.http.get(this.apiService.buildUrl('/admin/export/users'), { responseType: 'blob' });
   }
 }

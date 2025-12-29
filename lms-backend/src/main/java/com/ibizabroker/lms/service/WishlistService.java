@@ -28,7 +28,7 @@ public class WishlistService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
     }
 
-    public void addToWishlist(Long bookId) {
+    public void addToWishlist(Integer bookId) {
         Users user = getCurrentUser();
         Books book = booksRepository.findById(bookId)
                 .orElseThrow(() -> new RuntimeException("Book not found"));
@@ -41,14 +41,14 @@ public class WishlistService {
         }
     }
 
-    public void removeFromWishlist(Long bookId) {
+    public void removeFromWishlist(Integer bookId) {
         Users user = getCurrentUser();
         Books book = booksRepository.findById(bookId)
                 .orElseThrow(() -> new RuntimeException("Book not found"));
         wishlistRepository.deleteByUserAndBook(user, book);
     }
 
-    public boolean isWishlisted(Long bookId) {
+    public boolean isWishlisted(Integer bookId) {
         try {
             Users user = getCurrentUser();
             Books book = booksRepository.findById(bookId).orElse(null);

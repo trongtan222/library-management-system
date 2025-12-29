@@ -74,6 +74,49 @@ public class ReviewController {
         ));
     }
 
+        @GetMapping("/api/my/reviews")
+        @PreAuthorize("hasRole('USER')")
+        public List<ReviewDto> getMyReviews(@AuthenticationPrincipal UserDetails userDetails) {
+        Users currentUser = usersRepository.findByUsername(userDetails.getUsername())
+            .orElseThrow(() -> new NotFoundException("Người dùng không hợp lệ"));
+        return reviewRepository.findByUser_UserIdOrderByCreatedAtDesc(currentUser.getUserId())
+            .stream().map(this::toDto).collect(Collectors.toList());
+        }
+
+        @PutMapping("/api/my/reviews/{reviewId}")
+        @PreAuthorize("hasRole('USER')")
+        public ResponseEntity<ReviewDto> updateMyReview(@PathVariable Integer reviewId,
+                                @Valid @RequestBody ReviewDto reviewDto,
+                                @AuthenticationPrincipal UserDetails userDetails) {
+        Users currentUser = usersRepository.findByUsername(userDetails.getUsername())
+            .orElseThrow(() -> new NotFoundException("Người dùng không hợp lệ"));
+        Review review = reviewRepository.findById(reviewId)
+            .orElseThrow(() -> new NotFoundException("Không tìm thấy đánh giá"));
+        if (!review.getUser().getUserId().equals(currentUser.getUserId())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        review.setRating(reviewDto.rating);
+        review.setComment(reviewDto.comment);
+        review.setApproved(false); // chỉnh sửa cần duyệt lại (tuỳ chính sách)
+        Review saved = reviewRepository.save(review);
+        return ResponseEntity.ok(toDto(saved));
+        }
+
+        @DeleteMapping("/api/my/reviews/{reviewId}")
+        @PreAuthorize("hasRole('USER')")
+        public ResponseEntity<Void> deleteMyReview(@PathVariable Integer reviewId,
+                               @AuthenticationPrincipal UserDetails userDetails) {
+        Users currentUser = usersRepository.findByUsername(userDetails.getUsername())
+            .orElseThrow(() -> new NotFoundException("Người dùng không hợp lệ"));
+        Review review = reviewRepository.findById(reviewId)
+            .orElseThrow(() -> new NotFoundException("Không tìm thấy đánh giá"));
+        if (!review.getUser().getUserId().equals(currentUser.getUserId())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        reviewRepository.delete(review);
+        return ResponseEntity.noContent().build();
+        }
+
     // --- API CHO ADMIN ---
 
     @GetMapping("/api/admin/reviews") // <-- Đảm bảo endpoint này tồn tại
@@ -108,6 +151,16 @@ public class ReviewController {
         review.setApproved(true);
         Review updatedReview = reviewRepository.save(review);
         return ResponseEntity.ok(toDto(updatedReview));
+    }
+
+    @DeleteMapping("/api/admin/reviews/{reviewId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> deleteReview(@PathVariable Integer reviewId) {
+        if (!reviewRepository.existsById(reviewId)) {
+            return ResponseEntity.notFound().build();
+        }
+        reviewRepository.deleteById(reviewId);
+        return ResponseEntity.noContent().build();
     }
     
     // --- HÀM TIỆN ÍCH ---

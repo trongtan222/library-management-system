@@ -1,0 +1,41 @@
+<div class="container py-3">
+  <h2><i class="fa-solid fa-file-import"></i> Nhập/Xuất Dữ Liệu</h2>
+
+  <div class="row g-4 mt-2">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header">Sách</div>
+        <div class="card-body">
+          <div class="mb-2">
+            <label class="form-label">Nhập sách (CSV/Excel)</label>
+            <input type="file" class="form-control" (change)="onFileChange($event, 'books')" />
+          </div>
+          <button class="btn btn-primary me-2" [disabled]="isUploadingBooks" (click)="importBooks()">
+            <i class="fa-solid fa-upload"></i> Nhập
+          </button>
+          <button class="btn btn-outline-secondary" [disabled]="isExportingBooks" (click)="exportBooks()">
+            <i class="fa-solid fa-download"></i> Xuất
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header">Người Dùng</div>
+        <div class="card-body">
+          <div class="mb-2">
+            <label class="form-label">Nhập người dùng (CSV/Excel)</label>
+            <input type="file" class="form-control" (change)="onFileChange($event, 'users')" />
+          </div>
+          <button class="btn btn-primary me-2" [disabled]="isUploadingUsers" (click)="importUsers()">
+            <i class="fa-solid fa-upload"></i> Nhập
+          </button>
+          <button class="btn btn-outline-secondary" [disabled]="isExportingUsers" (click)="exportUsers()">
+            <i class="fa-solid fa-download"></i> Xuất
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

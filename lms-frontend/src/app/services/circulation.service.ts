@@ -46,6 +46,10 @@ export class CirculationService {
     return this.http.put(this.apiService.buildUrl('/user/circulation/loans/renew'), data);
   }
 
+  getMyRenewals(): Observable<Array<{ id: number; loanId: number; memberId: number; extraDays: number; status: string; createdAt: string; decidedAt?: string; adminNote?: string }>> {
+    return this.http.get<Array<{ id: number; loanId: number; memberId: number; extraDays: number; status: string; createdAt: string; decidedAt?: string; adminNote?: string }>>(this.apiService.buildUrl('/user/circulation/my-renewals'));
+  }
+
   getMyLoanHistory(): Observable<LoanDetails[]> {
     return this.http.get<LoanDetails[]>(this.apiService.buildUrl('/user/circulation/my-loans'));
   }

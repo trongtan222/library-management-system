@@ -2,6 +2,8 @@ package com.ibizabroker.lms.configuration;
 
 import com.ibizabroker.lms.util.JwtUtil;
 import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.security.SignatureException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -43,6 +45,10 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                 logger.warn("Unable to get JWT Token", e);
             } catch (ExpiredJwtException e) {
                 logger.warn("JWT Token has expired", e);
+            } catch (SignatureException e) {
+                logger.warn("Invalid JWT signature", e);
+            } catch (MalformedJwtException e) {
+                logger.warn("Malformed JWT token", e);
             }
         }
 

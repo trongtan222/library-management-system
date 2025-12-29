@@ -19,7 +19,7 @@ import java.util.function.Function;
 @Component
 public class JwtUtil {
 
-  @Value("${app.jwt-secret}")
+  @Value("${app.jwt-secret:dev-secret-change-me-32-bytes-minimum!!}")
   private String secret; // >= 32 bytes (hoặc base64)
 
   @Value("${app.jwt-expiration:86400000}")
@@ -68,11 +68,11 @@ private Date now() {
     Date exp = new Date(now.getTime() + expirationMs);
     Map<String, Object> claims = (extra == null) ? new HashMap<>() : new HashMap<>(extra);
     return Jwts.builder()
-        .setClaims(claims)
-        .setSubject(user.getUsername())
-        .setIssuedAt(now)
-        .setExpiration(exp)
-        .signWith(key(), SignatureAlgorithm.HS256)
+        .claims(claims)
+        .subject(user.getUsername())
+        .issuedAt(now)
+        .expiration(exp)
+        .signWith(key())
         .compact();
   }
 
