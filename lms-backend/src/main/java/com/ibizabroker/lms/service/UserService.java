@@ -39,8 +39,8 @@ public class UserService {
 
     @Transactional(readOnly = true)
     public Users getUserById(Integer id) {
-        return usersRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Không tìm thấy người dùng với ID: " + id));
+        return usersRepository.findByIdWithRoles(id)
+            .orElseThrow(() -> new NotFoundException("Không tìm thấy người dùng với ID: " + id));
     }
 
     public UserDto createUser(UserCreateDto userCreateDto) {
@@ -97,7 +97,7 @@ public class UserService {
     }
 
     // --- Helper Methods ---
-    private UserDto mapToUserDto(Users user) {
+    public UserDto mapToUserDto(Users user) {
         UserDto dto = new UserDto();
         dto.setUserId(user.getUserId());
         dto.setName(user.getName());

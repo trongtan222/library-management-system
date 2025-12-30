@@ -9,6 +9,13 @@ import java.util.Optional;
 
 public interface UsersRepository extends JpaRepository<Users, Integer> {
 
+       @Query("""
+              select distinct u from Users u
+              left join fetch u.roles r
+              where u.userId = :id
+       """)
+       Optional<Users> findByIdWithRoles(@Param("id") Integer id);
+
     Optional<Users> findByUsername(String username);
 
     // (giữ nguyên nếu nơi khác đang dùng)

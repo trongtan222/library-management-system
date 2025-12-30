@@ -44,15 +44,17 @@ public class AdminController {
     }
 
     @GetMapping("/users/{id}")
-    public ResponseEntity<Users> getUserById(@PathVariable Integer id) {
+    public ResponseEntity<UserDto> getUserById(@PathVariable Integer id) {
         Users user = userService.getUserById(id);
-        return ResponseEntity.ok(user);
+        UserDto dto = userService.mapToUserDto(user);
+        return ResponseEntity.ok(dto);
     }
-    
+
     @PutMapping("/users/{id}")
-    public ResponseEntity<Users> updateUser(@PathVariable Integer id, @RequestBody UserUpdateDto userDetails) {
+    public ResponseEntity<UserDto> updateUser(@PathVariable Integer id, @RequestBody UserUpdateDto userDetails) {
         Users updatedUser = userService.updateUser(id, userDetails);
-        return ResponseEntity.ok(updatedUser);
+        UserDto dto = userService.mapToUserDto(updatedUser);
+        return ResponseEntity.ok(dto);
     }
 
     @DeleteMapping("/users/{id}")
