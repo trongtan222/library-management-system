@@ -3,6 +3,8 @@ package com.ibizabroker.lms.service;
 import com.ibizabroker.lms.dao.SystemSettingRepository;
 import com.ibizabroker.lms.entity.SystemSetting;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,10 +23,12 @@ public class SystemSettingService {
     private final SystemSettingRepository repo;
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "system-settings", key = "'all'")
     public List<SystemSetting> findAll() {
         return repo.findAll();
     }
 
+    @CacheEvict(value = "system-settings", allEntries = true)
     public SystemSetting upsert(String key, String value) {
         Optional<SystemSetting> existing = repo.findByKeyIgnoreCase(key);
         SystemSetting s = existing.orElseGet(() -> new SystemSetting(key, value));
@@ -34,6 +38,7 @@ public class SystemSettingService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "system-settings", key = "'int:' + #key")
     public int getInt(String key, int defaultValue) {
         return repo.findByKeyIgnoreCase(key)
                 .map(SystemSetting::getValue)
@@ -44,6 +49,7 @@ public class SystemSettingService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "system-settings", key = "'decimal:' + #key")
     public BigDecimal getBigDecimal(String key, BigDecimal defaultValue) {
         return repo.findByKeyIgnoreCase(key)
                 .map(SystemSetting::getValue)

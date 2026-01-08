@@ -17,8 +17,8 @@ export interface DashboardStats {
 
 export interface DashboardDetails {
   stats: DashboardStats;
-  mostLoanedBooks: { bookId: number; loanCount: number; }[];
-  topBorrowers: { memberId: number; loanCount: number; }[];
+  mostLoanedBooks: { bookId: number; loanCount: number }[];
+  topBorrowers: { memberId: number; loanCount: number }[];
   recentActivities: any[];
   overdueLoans: any[];
 }
@@ -64,13 +64,13 @@ export interface RenewalRequestDto {
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class AdminService {
   // environment.apiBaseUrl already includes /api
   private API_URL = `${environment.apiBaseUrl}/admin`;
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient) {}
 
   public getDashboardDetails(): Observable<DashboardDetails> {
     return this.http.get<DashboardDetails>(`${this.API_URL}/dashboard/details`);
@@ -85,34 +85,88 @@ export class AdminService {
   }
 
   public markFineAsPaid(loanId: number): Observable<any> {
-      return this.http.post(`${this.API_URL}/fines/${loanId}/pay`, {});
+    return this.http.post(`${this.API_URL}/fines/${loanId}/pay`, {});
   }
 
-  public getReportSummary(start: string, end: string): Observable<ReportSummary> {
+  public getReportSummary(
+    start: string,
+    end: string
+  ): Observable<ReportSummary> {
     const params = { start, end };
-    return this.http.get<ReportSummary>(`${this.API_URL}/reports/summary`, { params });
+    return this.http.get<ReportSummary>(`${this.API_URL}/reports/summary`, {
+      params,
+    });
+  }
+
+  public exportLoansExcel(
+    startDate: string,
+    endDate: string
+  ): Observable<Blob> {
+    const params = { startDate, endDate };
+    return this.http.get(`${this.API_URL}/reports/export/loans/excel`, {
+      params,
+      responseType: 'blob',
+    });
+  }
+
+  public exportBooksExcel(): Observable<Blob> {
+    return this.http.get(`${this.API_URL}/reports/export/books/excel`, {
+      responseType: 'blob',
+    });
+  }
+
+  public exportUsersExcel(): Observable<Blob> {
+    return this.http.get(`${this.API_URL}/reports/export/users/excel`, {
+      responseType: 'blob',
+    });
   }
 
   // ---------- SETTINGS ----------
-  public getSettings(): Observable<Array<{ id: number; key: string; value: string }>> {
-    return this.http.get<Array<{ id: number; key: string; value: string }>>(`${this.API_URL}/settings`);
+  public getSettings(): Observable<
+    Array<{ id: number; key: string; value: string }>
+  > {
+    return this.http.get<Array<{ id: number; key: string; value: string }>>(
+      `${this.API_URL}/settings`
+    );
   }
 
-  public updateSetting(key: string, value: string): Observable<{ id: number; key: string; value: string }> {
-    return this.http.put<{ id: number; key: string; value: string }>(`${this.API_URL}/settings/${encodeURIComponent(key)}`, { value });
+  public updateSetting(
+    key: string,
+    value: string
+  ): Observable<{ id: number; key: string; value: string }> {
+    return this.http.put<{ id: number; key: string; value: string }>(
+      `${this.API_URL}/settings/${encodeURIComponent(key)}`,
+      { value }
+    );
   }
 
   // ---------- RENEWALS ----------
-  public listRenewals(status?: 'PENDING' | 'APPROVED' | 'REJECTED'): Observable<RenewalRequestDto[]> {
-    const url = status ? `${environment.apiBaseUrl}/admin/renewals?status=${status}` : `${environment.apiBaseUrl}/admin/renewals`;
+  public listRenewals(
+    status?: 'PENDING' | 'APPROVED' | 'REJECTED'
+  ): Observable<RenewalRequestDto[]> {
+    const url = status
+      ? `${environment.apiBaseUrl}/admin/renewals?status=${status}`
+      : `${environment.apiBaseUrl}/admin/renewals`;
     return this.http.get<RenewalRequestDto[]>(url);
   }
 
-  public approveRenewal(id: number, note?: string): Observable<RenewalRequestDto> {
-    return this.http.post<RenewalRequestDto>(`${environment.apiBaseUrl}/admin/renewals/${id}/approve`, { note });
+  public approveRenewal(
+    id: number,
+    note?: string
+  ): Observable<RenewalRequestDto> {
+    return this.http.post<RenewalRequestDto>(
+      `${environment.apiBaseUrl}/admin/renewals/${id}/approve`,
+      { note }
+    );
   }
 
-  public rejectRenewal(id: number, note?: string): Observable<RenewalRequestDto> {
-    return this.http.post<RenewalRequestDto>(`${environment.apiBaseUrl}/admin/renewals/${id}/reject`, { note });
+  public rejectRenewal(
+    id: number,
+    note?: string
+  ): Observable<RenewalRequestDto> {
+    return this.http.post<RenewalRequestDto>(
+      `${environment.apiBaseUrl}/admin/renewals/${id}/reject`,
+      { note }
+    );
   }
 }

@@ -1,3 +1,54 @@
+/* --- FORCE BOOK TITLE VISIBILITY IN LIGHT THEME --- */
+.new-books-section .book-title,
+.section-wrap .book-title,
+body.light-theme .book-title {
+  color: #1e293b !important;
+  background: #fff !important;
+  padding: 4px 10px !important;
+  border-radius: 4px !important;
+  font-weight: 900 !important;
+  font-size: 1.2rem !important;
+  border: 2px solid #1e293b !important;
+  display: block !important;
+  opacity: 1 !important;
+  text-shadow: none !important;
+  filter: none !important;
+  position: relative !important;
+  z-index: 999 !important;
+  -webkit-line-clamp: unset !important;
+  line-clamp: unset !important;
+  -webkit-box-orient: unset !important;
+  overflow: visible !important;
+}
+
+/* --- FORCE FOOTER LIGHT THEME --- */
+body.light-theme .site-footer {
+  background-color: #fff !important;
+  color: #1e293b !important;
+  border-top: 1px solid #e2e8f0 !important;
+}
+
+body.light-theme .footer-col h3 {
+  color: #1e293b !important;
+  border-left: 4px solid #0066cc !important;
+  font-weight: 700 !important;
+  text-shadow: none !important;
+  background: transparent !important;
+  padding-left: 10px !important;
+}
+
+body.light-theme .footer-bottom {
+  border-top: 1px solid #e2e8f0 !important;
+  color: #64748b !important;
+}
+
+body.light-theme .footer-nav-vertical a {
+  color: #64748b !important;
+}
+
+body.light-theme .footer-nav-vertical a:hover {
+  color: #0066cc !important;
+}
 :host {
   display: block;
 }
@@ -215,14 +266,14 @@
   justify-content: center;
 }
 .chip {
-  background-color: #21262d;
-  color: var(--text);
+  background-color: var(--chip-bg, #21262d);
+  color: var(--chip-text, #f0f6fc);
   padding: 0.75rem 1.5rem;
   border-radius: 9999px;
   text-decoration: none;
-  font-weight: 500;
+  font-weight: 600;
   transition: all 0.2s ease;
-  border: 1px solid var(--border);
+  border: 1px solid var(--chip-border, var(--border));
   font-size: 0.95rem;
 }
 .chip:hover {
@@ -291,6 +342,7 @@
   line-height: 1.4;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -328,12 +380,11 @@
 }
 
 /* Footer Styles */
-.site-footer {
-  background-color: #0d1117;
-  border-top: 1px solid var(--border);
-  padding-top: 4rem;
-  padding-bottom: 2rem;
-  color: var(--text-muted);
+/* --- FORCE FOOTER LIGHT THEME OVERRIDE --- */
+body.light-theme .site-footer {
+  background-color: #fff !important;
+  color: #1e293b !important;
+  border-top: 1px solid #e2e8f0 !important;
 }
 
 .footer-grid {
@@ -344,12 +395,18 @@
 }
 
 .footer-col h3 {
-  color: #f0f6fc;
+  color: #1e293b;
   font-size: 1.2rem;
   margin-bottom: 1.5rem;
   font-weight: 700;
   border-left: 4px solid var(--accent);
   padding-left: 10px;
+}
+
+/* Dark theme override for footer */
+body.dark-theme .footer-col h3,
+:host-context(body.dark-theme) .footer-col h3 {
+  color: #f0f6fc !important;
 }
 
 .footer-col p,
@@ -438,18 +495,27 @@ body.light-theme .categories-section,
 body.light-theme .categories-section .section-wrap {
   background: #f8fafc !important;
 }
-body.light-theme .chip {
-  background-color: #e2e8f0 !important;
-  color: #1e293b !important;
-  border-color: #cbd5e1 !important;
-  font-weight: 700 !important;
+body.light-theme .chip,
+:host-context(body.light-theme) .chip,
+.light-theme .chip {
+  --chip-bg: #3b82f6;
+  --chip-text: #ffffff;
+  --chip-border: #2563eb;
+  background-color: #3b82f6 !important;
+  color: #ffffff !important;
+  border-color: #2563eb !important;
+  font-weight: 600 !important;
   text-shadow: none !important;
   opacity: 1 !important;
 }
-body.light-theme .chip:hover {
-  background-color: #0066cc !important;
-  color: #fff !important;
-  border-color: #0066cc !important;
+body.light-theme .chip:hover,
+:host-context(body.light-theme) .chip:hover,
+.light-theme .chip:hover {
+  background-color: #1d4ed8 !important;
+  color: #ffffff !important;
+  border-color: #1e40af !important;
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
 }
 body.light-theme .book-card {
   background-color: #fff !important;
@@ -517,9 +583,12 @@ body.light-theme .footer-bottom {
 /* ===========================
    Light Theme: Home Section Fixes
    =========================== */
-body.light-theme .section-title {
-  color: #1e293b !important;
+body.light-theme .section-title,
+:host-context(body.light-theme) .section-title,
+.light-theme .section-title {
+  color: #0f172a !important;
   text-shadow: none !important;
+  font-weight: 800 !important;
 }
 body.light-theme .section-header {
   color: #1e293b !important;
@@ -528,16 +597,18 @@ body.light-theme .book-title {
   color: #1e293b !important;
   text-shadow: none !important;
 }
-body.light-theme a.chip {
-  background-color: #e2e8f0 !important;
-  color: #1e293b !important;
-  border-color: #cbd5e1 !important;
-  font-weight: 700 !important;
+body.light-theme a.chip,
+:host-context(body.light-theme) a.chip {
+  background-color: #3b82f6 !important;
+  color: #ffffff !important;
+  border-color: #2563eb !important;
+  font-weight: 600 !important;
   text-shadow: none !important;
   opacity: 1 !important;
 }
-body.light-theme a.chip:hover {
-  background-color: #0066cc !important;
-  color: #fff !important;
-  border-color: #0066cc !important;
+body.light-theme a.chip:hover,
+:host-context(body.light-theme) a.chip:hover {
+  background-color: #1d4ed8 !important;
+  color: #ffffff !important;
+  border-color: #1e40af !important;
 }

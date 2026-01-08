@@ -13,7 +13,6 @@ import { catchError, map } from 'rxjs/operators'; // Thêm map
 import { ToastrService } from 'ngx-toastr';
 import { ReviewService, Review } from '../services/review.service';
 
-
 @Component({
   selector: 'app-my-account',
   templateUrl: './my-account.component.html',
@@ -21,7 +20,7 @@ import { ReviewService, Review } from '../services/review.service';
   standalone: false,
 })
 export class MyAccountComponent implements OnInit {
-  userProfile: User | null = null;
+  userProfile: User = { userId: 0, username: '', name: '', roles: [] } as User;
   activeLoans: LoanDetails[] = [];
   historyLoans: LoanDetails[] = [];
   myFines: FineDetails[] = [];

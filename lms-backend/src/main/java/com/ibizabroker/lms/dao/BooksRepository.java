@@ -31,15 +31,18 @@ public interface BooksRepository extends JpaRepository<Books, Integer> {
     List<Books> findByNumberOfCopiesAvailableGreaterThan(int n);
 
    // === FIX N+1 PROBLEM: Override findAll() with EntityGraph ===
-   @Override
+   @SuppressWarnings("null")
+@Override
    @EntityGraph(attributePaths = {"authors", "categories"})
    List<Books> findAll();
 
    // Paged findAll: do not fetch-join collections to avoid pagination explosion; rely on batch size
-   @Override
-   Page<Books> findAll(Pageable pageable);
+   @SuppressWarnings("null")
+@Override
+   Page<Books> findAll(@SuppressWarnings("null")    Pageable pageable);
 
     // (Hàm findWithFiltersAndPagination đã đúng, giữ nguyên)
+   @EntityGraph(attributePaths = {"authors", "categories"})
        @Query(value = "SELECT DISTINCT b FROM Books b " +
                  "LEFT JOIN b.authors a " +
                  "LEFT JOIN b.categories c " +
@@ -61,9 +64,10 @@ public interface BooksRepository extends JpaRepository<Books, Integer> {
         Pageable pageable);
 
     // === SỬA LỖI 1: GHI ĐÈ findById ĐỂ TẢI KÈM DETAILS ===
-   @EntityGraph(attributePaths = {"authors", "categories"})
+   @SuppressWarnings("null")
+@EntityGraph(attributePaths = {"authors", "categories"})
    @Query("SELECT b FROM Books b LEFT JOIN FETCH b.authors LEFT JOIN FETCH b.categories WHERE b.id = :id")
-   Optional<Books> findById(@Param("id") Integer bookId);
+   Optional<Books> findById(@SuppressWarnings("null") @Param("id") Integer bookId);
 
     // === SỬA LỖI 2: GHI ĐÈ findTop10... ĐỂ TẢI KÈM DETAILS ===
     // (JPQL không hỗ trợ LIMIT 10, nên chúng ta dùng Pageable)
@@ -73,4 +77,59 @@ public interface BooksRepository extends JpaRepository<Books, Integer> {
     
     // Xóa hàm cũ đi (hoặc để đó cũng không sao, nhưng hàm mới sẽ được dùng)
     // List<Books> findTop10ByOrderByIdDesc(); 
+
+    // === ADVANCED SEARCH QUERIES ===
+    
+    @EntityGraph(attributePaths = {"authors", "categories"})
+    @Query(value = "SELECT DISTINCT b FROM Books b " +
+           "LEFT JOIN b.authors a " +
+           "LEFT JOIN b.categories c " +
+           "WHERE (:query IS NULL OR :query = '' OR " +
+           "       LOWER(b.name) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
+           "       LOWER(b.isbn) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
+           "       LOWER(a.name) LIKE LOWER(CONCAT('%', :query, '%'))) " +
+           "AND (:authorIds IS NULL OR a.id IN :authorIds) " +
+           "AND (:categoryIds IS NULL OR c.id IN :categoryIds) " +
+           "AND (:yearFrom IS NULL OR b.publishedYear >= :yearFrom) " +
+           "AND (:yearTo IS NULL OR b.publishedYear <= :yearTo) " +
+           "AND (:availableOnly = false OR b.numberOfCopiesAvailable > 0)",
+           countQuery = "SELECT COUNT(DISTINCT b) FROM Books b " +
+           "LEFT JOIN b.authors a " +
+           "LEFT JOIN b.categories c " +
+           "WHERE (:query IS NULL OR :query = '' OR " +
+           "       LOWER(b.name) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
+           "       LOWER(b.isbn) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
+           "       LOWER(a.name) LIKE LOWER(CONCAT('%', :query, '%'))) " +
+           "AND (:authorIds IS NULL OR a.id IN :authorIds) " +
+           "AND (:categoryIds IS NULL OR c.id IN :categoryIds) " +
+           "AND (:yearFrom IS NULL OR b.publishedYear >= :yearFrom) " +
+           "AND (:yearTo IS NULL OR b.publishedYear <= :yearTo) " +
+           "AND (:availableOnly = false OR b.numberOfCopiesAvailable > 0)")
+    Page<Books> advancedSearch(
+        @Param("query") String query,
+        @Param("authorIds") List<Integer> authorIds,
+        @Param("categoryIds") List<Integer> categoryIds,
+        @Param("yearFrom") Integer yearFrom,
+        @Param("yearTo") Integer yearTo,
+        @Param("availableOnly") boolean availableOnly,
+        Pageable pageable);
+
+    @EntityGraph(attributePaths = {"authors", "categories"})
+    @Query("SELECT b FROM Books b " +
+           "JOIN b.categories c " +
+           "WHERE b.id <> :excludeBookId " +
+           "AND c.id IN :categoryIds " +
+           "ORDER BY b.numberOfCopiesAvailable DESC")
+    List<Books> findSimilarBooks(
+        @Param("excludeBookId") Integer excludeBookId,
+        @Param("categoryIds") List<Integer> categoryIds,
+        Pageable pageable);
+
+    @Query("SELECT DISTINCT b.name FROM Books b WHERE LOWER(b.name) LIKE LOWER(CONCAT('%', :query, '%'))")
+    List<String> findSearchSuggestions(@Param("query") String query, Pageable pageable);
+
+    @Query("SELECT DISTINCT a.name FROM Author a WHERE LOWER(a.name) LIKE LOWER(CONCAT('%', :query, '%'))")
+    List<String> findAuthorSuggestions(@Param("query") String query, Pageable pageable);
+
+    Optional<Books> findByIsbnIgnoreCase(String isbn);
 }

@@ -23,7 +23,20 @@ Chart.register(...registerables);
   standalone: false,
 })
 export class DashboardComponent implements OnInit, OnDestroy {
-  details: DashboardDetails | null = null;
+  details: DashboardDetails = {
+    stats: {
+      totalBooks: 0,
+      totalUsers: 0,
+      activeLoans: 0,
+      overdueLoans: 0,
+      totalFines: 0,
+      totalUnpaidFines: 0,
+    },
+    mostLoanedBooks: [],
+    topBorrowers: [],
+    recentActivities: [],
+    overdueLoans: [],
+  } as DashboardDetails;
   isLoading = true;
   errorMessage = '';
 

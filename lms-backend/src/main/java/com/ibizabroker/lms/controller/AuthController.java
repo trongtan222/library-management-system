@@ -55,6 +55,7 @@ public class AuthController {
     }
 
     // ===== REGISTER =====
+    @SuppressWarnings("null")
     @PostMapping("/register")
     public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest req) {
         String username = req.getUsername().trim().toLowerCase();
@@ -85,6 +86,7 @@ public class AuthController {
     public static record LoginRequest(String username, String password) {}
     public static record LoginResponse(String token, Integer userId, String name, List<String> roles) {}
 
+    @SuppressWarnings("null")
     @PostMapping(
             value = "/authenticate",
             consumes = MediaType.APPLICATION_JSON_VALUE,

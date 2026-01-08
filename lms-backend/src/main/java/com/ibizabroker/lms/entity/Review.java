@@ -35,12 +35,21 @@ public class Review {
     @Column(columnDefinition = "TEXT")
     private String comment; // Bình luận (tùy chọn)
 
+    @Column(columnDefinition = "TEXT")
+    private String images; // JSON array chứa URLs của ảnh (tùy chọn)
+
     @Column(nullable = false)
     private boolean approved = false; // Trạng thái phê duyệt, mặc định là false
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    @OneToMany(mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true)
+    private java.util.List<ReviewLike> likes = new java.util.ArrayList<>();
+
+    @OneToMany(mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true)
+    private java.util.List<ReviewComment> comments = new java.util.ArrayList<>();
 
     // Getters and Setters
     public Integer getId() { return id; }
@@ -53,8 +62,14 @@ public class Review {
     public void setRating(Integer rating) { this.rating = rating; }
     public String getComment() { return comment; }
     public void setComment(String comment) { this.comment = comment; }
+    public String getImages() { return images; }
+    public void setImages(String images) { this.images = images; }
     public boolean isApproved() { return approved; }
     public void setApproved(boolean approved) { this.approved = approved; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public java.util.List<ReviewLike> getLikes() { return likes; }
+    public void setLikes(java.util.List<ReviewLike> likes) { this.likes = likes; }
+    public java.util.List<ReviewComment> getComments() { return comments; }
+    public void setComments(java.util.List<ReviewComment> comments) { this.comments = comments; }
 }

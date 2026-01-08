@@ -27,6 +27,7 @@ public class AdminRenewalController {
         return ResponseEntity.ok(renewalRepo.findByStatus(RenewalStatus.valueOf(status.toUpperCase())));
     }
 
+    @SuppressWarnings("null")
     @PostMapping("/{id}/approve")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<RenewalRequest> approve(@PathVariable Long id, @RequestBody(required = false) NotePayload payload){

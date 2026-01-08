@@ -28,6 +28,7 @@ public class FineController {
     @PostMapping("/{loanId}/pay")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     public ResponseEntity<Void> markFineAsPaid(@PathVariable Integer loanId) {
+        @SuppressWarnings("null")
         Loan loan = loanRepository.findById(loanId)
                 .orElseThrow(() -> new NotFoundException("Loan not found"));
         loan.setFineStatus("PAID");

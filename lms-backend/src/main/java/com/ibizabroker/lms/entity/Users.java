@@ -32,6 +32,12 @@ public class Users {
     @Column(length = 100)
     private String email;
 
+    @Column(name = "google_id", unique = true)
+    private String googleId;
+
+    @Column(name = "avatar", length = 500)
+    private String avatar;
+
     @Column(name = "student_class")
     private String studentClass;
 
@@ -73,6 +79,12 @@ public class Users {
     // === THÊM GETTER/SETTER CHO EMAIL ===
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
+
+    public String getGoogleId() { return googleId; }
+    public void setGoogleId(String googleId) { this.googleId = googleId; }
+
+    public String getAvatar() { return avatar; }
+    public void setAvatar(String avatar) { this.avatar = avatar; }
 
     public void addRole(Role role) { this.roles.add(role); }
 

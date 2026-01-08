@@ -24,6 +24,8 @@ export class AdminNewsComponent implements OnInit {
   isLoading = false;
   editing?: NewsItem;
   newItem: NewsItem = { title: '', content: '' };
+  sendEmailOnCreate = false;
+  sendEmailOnUpdate = false;
   private apiUrl = environment.apiBaseUrl;
 
   constructor(private http: HttpClient, private toastr: ToastrService) {}
@@ -47,17 +49,22 @@ export class AdminNewsComponent implements OnInit {
 
   startEdit(item: NewsItem) {
     this.editing = { ...item };
+    this.sendEmailOnUpdate = false;
   }
   cancelEdit() {
     this.editing = undefined;
+    this.sendEmailOnUpdate = false;
   }
 
   saveEdit() {
     if (!this.editing?.id) return;
+    const params = { notifyEmail: String(this.sendEmailOnUpdate) };
+
     this.http
       .put<NewsItem>(
         `${this.apiUrl}/admin/news/${this.editing.id}`,
-        this.editing
+        this.editing,
+        { params }
       )
       .subscribe({
         next: (updated) => {
@@ -75,12 +82,15 @@ export class AdminNewsComponent implements OnInit {
       this.toastr.error('Nhập tiêu đề');
       return;
     }
+    const params = { notifyEmail: String(this.sendEmailOnCreate) };
+
     this.http
-      .post<NewsItem>(`${this.apiUrl}/admin/news`, this.newItem)
+      .post<NewsItem>(`${this.apiUrl}/admin/news`, this.newItem, { params })
       .subscribe({
         next: (created) => {
           this.items.unshift(created);
           this.newItem = { title: '', content: '' };
+          this.sendEmailOnCreate = false;
           this.toastr.success('Tạo tin tức thành công');
         },
         error: () => this.toastr.error('Tạo tin thất bại'),

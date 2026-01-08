@@ -13,7 +13,7 @@
           <div class="member-badge">THCS PHUONG TU</div>
           <div class="d-flex align-items-center mb-4 mt-2">
             <div class="avatar-placeholder me-3">
-              {{ userProfile.name?.charAt(0) || "?" | uppercase }}
+              {{ userProfile.name.charAt(0) || "?" | uppercase }}
             </div>
             <div>
               <h5 class="mb-0 fw-bold text-truncate" style="max-width: 200px">
@@ -25,7 +25,7 @@
           <div class="member-details">
             <div class="d-flex justify-content-between mb-1">
               <span>Vai trò</span>
-              <span class="fw-bold">{{ userProfile.roles?.join(", ") }}</span>
+              <span class="fw-bold">{{ userProfile.roles.join(", ") }}</span>
             </div>
             <div class="d-flex justify-content-between">
               <span>Trạng thái</span>
@@ -103,14 +103,14 @@
     <div class="col-lg-8">
       <!-- 1. PROFILE TAB -->
       <div *ngIf="currentTab === 'PROFILE'" class="animate-fade-in">
-        <h3 class="mb-4 fw-bold text-white">Tổng Quan</h3>
+        <h3 class="mb-4 fw-bold">Tổng Quan</h3>
 
         <!-- Stats Row -->
         <div class="row g-3 mb-4">
           <div class="col-md-4">
             <div class="stat-box bg-dark border-secondary p-3 rounded">
               <div class="small text-uppercase">Đã Mượn</div>
-              <div class="h2 mb-0 text-white">
+              <div class="h2 mb-0 text-info">
                 {{ totalBorrowed }} <small class="fs-6">cuốn</small>
               </div>
             </div>
@@ -156,7 +156,7 @@
               <div class="col-sm-4">Nhóm quyền</div>
               <div class="col-sm-8">
                 <span class="badge bg-secondary">{{
-                  userProfile.roles?.join(", ")
+                  userProfile.roles.join(", ")
                 }}</span>
               </div>
             </div>
@@ -282,7 +282,7 @@
 
       <!-- 3. HISTORY TAB -->
       <div *ngIf="currentTab === 'HISTORY'" class="animate-fade-in">
-        <h3 class="mb-4 fw-bold text-white">Lịch Sử Trả Sách</h3>
+        <h3 class="mb-4 fw-bold">Lịch Sử Trả Sách</h3>
         <div class="table-responsive">
           <table
             class="table table-dark table-hover border-secondary rounded overflow-hidden"
@@ -351,7 +351,7 @@
 
       <!-- 4. FINES TAB -->
       <div *ngIf="currentTab === 'FINES'" class="animate-fade-in">
-        <h3 class="mb-4 fw-bold text-white">Danh Sách Phí Phạt</h3>
+        <h3 class="mb-4 fw-bold">Danh Sách Phí Phạt</h3>
 
         <div
           *ngIf="myFines.length === 0"
@@ -368,7 +368,7 @@
           <div class="card-body">
             <div class="d-flex justify-content-between align-items-start">
               <div>
-                <h5 class="text-white">{{ fine.bookName }}</h5>
+                <h5 class="text-info">{{ fine.bookName }}</h5>
                 <p class="text-muted small mb-0">
                   Quá hạn {{ fine.overdueDays }} ngày
                 </p>
@@ -385,7 +385,7 @@
             </div>
           </div>
           <div
-            class="card-footer bg-danger bg-opacity-10 border-danger text-danger small"
+            class="card-footer bg-danger bg-opacity-10 border-danger text-white small"
           >
             Vui lòng liên hệ thủ thư để thanh toán khoản phạt này.
           </div>
@@ -394,7 +394,7 @@
 
       <!-- 5. MY REVIEWS TAB -->
       <div *ngIf="currentTab === 'REVIEWS'" class="animate-fade-in">
-        <h3 class="mb-4 fw-bold text-white">Đánh Giá Của Tôi</h3>
+        <h3 class="mb-4 fw-bold">Đánh Giá Của Tôi</h3>
 
         <div
           *ngIf="myReviews.length === 0"

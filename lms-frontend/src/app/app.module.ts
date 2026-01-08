@@ -1,4 +1,4 @@
-import { NgModule } from '@angular/core';
+import { NgModule, NO_ERRORS_SCHEMA } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { MarkdownModule } from 'ngx-markdown';
 import { SecurityContext } from '@angular/core';
@@ -57,6 +57,12 @@ import { ForgotPasswordComponent } from './forgot-password/forgot-password.compo
 import { ResetPasswordComponent } from './reset-password/reset-password.component';
 import { AdminSettingsComponent } from './admin/admin-settings/admin-settings.component';
 import { RenewalsComponent } from './admin/renewals/renewals.component';
+import { GamificationComponent } from './gamification/gamification.component';
+import {
+  SocialLoginModule,
+  GoogleLoginProvider,
+  SocialAuthServiceConfig,
+} from '@abacritt/angularx-social-login';
 
 @NgModule({
   declarations: [
@@ -89,6 +95,7 @@ import { RenewalsComponent } from './admin/renewals/renewals.component';
     ResetPasswordComponent,
     AdminSettingsComponent,
     RenewalsComponent,
+    GamificationComponent,
   ],
   imports: [
     BrowserModule,
@@ -97,9 +104,6 @@ import { RenewalsComponent } from './admin/renewals/renewals.component';
     RouterModule,
     BrowserAnimationsModule,
     CommonModule,
-    DatePipe,
-    CurrencyPipe,
-    UpperCasePipe,
     ToastrModule.forRoot({
       timeOut: 3000,
       positionClass: 'toast-bottom-right',
@@ -110,6 +114,7 @@ import { RenewalsComponent } from './admin/renewals/renewals.component';
     MarkdownModule.forRoot({
       sanitize: SecurityContext.HTML,
     }),
+    // SocialLoginModule, // Tạm tắt để fix lỗi
   ],
   providers: [
     AuthGuard,
@@ -130,9 +135,31 @@ import { RenewalsComponent } from './admin/renewals/renewals.component';
     },
     UsersService,
     BooksService,
+    // Tạm tắt Google Login để fix lỗi
+    // {
+    //   provide: 'SocialAuthServiceConfig',
+    //   useValue: {
+    //     autoLogin: false,
+    //     providers: [
+    //       {
+    //         id: GoogleLoginProvider.PROVIDER_ID,
+    //         provider: new GoogleLoginProvider(
+    //           '1086947846339-o9j7dfersslfn681jbdq6qelivervlft.apps.googleusercontent.com'
+    //         ),
+    //       },
+    //     ],
+    //     onError: (err: any) => {
+    //       console.error('Social auth error:', err);
+    //     },
+    //   } as SocialAuthServiceConfig,
+    // },
     UserAuthService,
+    DatePipe,
+    CurrencyPipe,
+    UpperCasePipe,
     provideHttpClient(withInterceptorsFromDi()),
   ],
+  schemas: [NO_ERRORS_SCHEMA],
   bootstrap: [AppComponent],
 })
 export class AppModule {}

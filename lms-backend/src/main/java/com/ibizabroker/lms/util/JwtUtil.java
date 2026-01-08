@@ -111,4 +111,34 @@ private Date now() {
   public String generateToken(String username) {
     throw new UnsupportedOperationException("Use generateToken(UserDetails, extraClaims)");
   }
+
+  /**
+   * Extract userId from Authentication object
+   * Note: Prefer using @AuthenticationPrincipal with UsersRepository instead
+   */
+  public Integer extractUserIdFromAuth(org.springframework.security.core.Authentication auth) {
+    if (auth == null || auth.getPrincipal() == null) {
+      throw new IllegalStateException("Authentication is required");
+    }
+    
+    // Get from authentication details/credentials if stored as JWT
+    Object credentials = auth.getCredentials();
+    if (credentials instanceof String token) {
+      try {
+        Claims claims = parseAllClaims(token);
+        Object userId = claims.get("userId");
+        if (userId != null) {
+          return userId instanceof Integer ? (Integer) userId : Integer.parseInt(userId.toString());
+        }
+      } catch (Exception ignored) {}
+    }
+    
+    // Fallback: get userId from name if it's numeric
+    String name = auth.getName();
+    if (name != null && name.matches("\\d+")) {
+      return Integer.parseInt(name);
+    }
+    
+    throw new IllegalStateException("Cannot extract userId from authentication - use UsersRepository.findByUsername instead");
+  }
 }

@@ -28,6 +28,7 @@ class ConversationServiceTest {
         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
     }
 
+    @SuppressWarnings("null")
     @Test
     void testSaveHistoryToCache() {
         String conversationId = "12345";

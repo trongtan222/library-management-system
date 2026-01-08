@@ -1,6 +1,6 @@
 <div class="container-fluid mt-4">
   <!-- SỬA: Đổi tiêu đề thành màu trắng -->
-  <h2 class="mb-4 fw-bold text-white">
+  <h2 class="mb-4 fw-bold">
     <i class="fa-solid fa-chart-line"></i> Dashboard Thống Kê
   </h2>
 
@@ -74,7 +74,7 @@
       </div>
       <div class="col">
         <div
-          class="stat-card bg-success text-white p-3 rounded shadow-sm h-100 clickable-card"
+          class="stat-card bg-success p-3 rounded shadow-sm h-100 clickable-card"
           [class.active-card]="selectedSection === 'USERS'"
           (click)="showSection('USERS')"
         >

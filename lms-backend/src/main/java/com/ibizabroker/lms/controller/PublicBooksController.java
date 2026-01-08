@@ -1,8 +1,8 @@
 package com.ibizabroker.lms.controller;
 
-import com.ibizabroker.lms.dao.BooksRepository;
 import com.ibizabroker.lms.entity.Books;
 import com.ibizabroker.lms.exceptions.NotFoundException;
+import com.ibizabroker.lms.service.BookService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -18,7 +18,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PublicBooksController {
 
-    private final BooksRepository booksRepository;
+    private final BookService bookService;
 
     @GetMapping
     public Page<Books> listBooks(
@@ -29,21 +29,22 @@ public class PublicBooksController {
             @RequestParam(defaultValue = "10") int size
     ) {
         Pageable pageable = PageRequest.of(page, size);
-        boolean isAvailableOnly = availableOnly != null && availableOnly;
-        return booksRepository.findWithFiltersAndPagination(search, genre, isAvailableOnly, pageable);
+        return bookService.findBooksWithFilters(search, genre, availableOnly, pageable);
     }
 
     @GetMapping("/newest")
     public ResponseEntity<List<Books>> getNewestBooks() {
         Pageable top10 = PageRequest.of(0, 10);
-        return ResponseEntity.ok(booksRepository.findNewestBooks(top10));
+        return ResponseEntity.ok(bookService.getNewestBooks(top10));
     }
 
     // ✅ BỔ SUNG API NÀY ĐỂ TÍNH NĂNG QUÉT QR HOẠT ĐỘNG
     @GetMapping("/{id}")
     public ResponseEntity<Books> getBookById(@PathVariable Integer id) {
-        return booksRepository.findById(id)
-                .map(ResponseEntity::ok)
-                .orElseThrow(() -> new NotFoundException("Không tìm thấy sách với ID: " + id));
+        try {
+            return ResponseEntity.ok(bookService.getBookById(id));
+        } catch (NotFoundException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 }

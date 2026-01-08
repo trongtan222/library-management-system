@@ -10,6 +10,11 @@ import com.ibizabroker.lms.entity.Books;
 import com.ibizabroker.lms.entity.Category;
 import com.ibizabroker.lms.exceptions.NotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,15 +31,17 @@ public class BookService {
     private final CategoryRepository categoryRepository;
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "book-details", key = "'all'")
     public List<Books> getAllBooks() {
         return booksRepository.findAll();
     }
-    
+
     @Transactional(readOnly = true)
-        public Books getBookById(Integer id) {
-            return booksRepository.findById(id)
-                 .orElseThrow(() -> new NotFoundException("Book with id " + id + " does not exist."));
-        }
+    @Cacheable(value = "book-details", key = "#id")
+    public Books getBookById(Integer id) {
+        return booksRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Book with id " + id + " does not exist."));
+    }
     
     @Transactional(readOnly = true)
     public List<Author> getAllAuthors() {
@@ -46,6 +53,14 @@ public class BookService {
         return categoryRepository.findAll();
     }
 
+    @CacheEvict(value = {
+            "book-details",
+            "books-newest",
+            "similar-books",
+            "featured-books",
+            "search-suggestions",
+            "author-suggestions"
+    }, allEntries = true)
     public Books createBook(BookCreateDto dto) {
         Books book = new Books();
         book.setName(dto.getName());
@@ -66,9 +81,18 @@ public class BookService {
         }
         book.setCategories(categories);
 
-        return booksRepository.save(book);
+        Books saved = booksRepository.save(book);
+        return saved;
     }
 
+    @CacheEvict(value = {
+            "book-details",
+            "books-newest",
+            "similar-books",
+            "featured-books",
+            "search-suggestions",
+            "author-suggestions"
+    }, allEntries = true)
     public Books updateBook(Integer id, BookUpdateDto dto) {
         Books book = getBookById(id);
 
@@ -88,11 +112,41 @@ public class BookService {
             book.setCategories(categories);
         }
         
-        return booksRepository.save(book);
+        @SuppressWarnings("null")
+        Books saved = booksRepository.save(book);
+        return saved;
     }
 
+    @SuppressWarnings("null")
+    @CacheEvict(value = {
+            "book-details",
+            "books-filtered",
+            "books-newest",
+            "similar-books",
+            "featured-books",
+            "search-suggestions",
+            "author-suggestions"
+    }, allEntries = true)
     public void deleteBook(Integer id) {
         Books book = getBookById(id);
         booksRepository.delete(book);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<Books> findBooksWithFilters(String search, String genre, Boolean availableOnly, Pageable pageable) {
+        boolean isAvailableOnly = availableOnly != null && availableOnly;
+        return booksRepository.findWithFiltersAndPagination(search, genre, isAvailableOnly, pageable);
+    }
+
+    @Transactional(readOnly = true)
+    @Cacheable(value = "books-newest", key = "#pageable.pageNumber + '|' + #pageable.pageSize + '|' + #pageable.sort.toString()")
+    public List<Books> getNewestBooks(Pageable pageable) {
+        return booksRepository.findNewestBooks(pageable);
+    }
+
+    @Transactional(readOnly = true)
+    @Cacheable(value = "featured-books", key = "'top-10'")
+    public List<Books> getFeaturedBooks() {
+        return booksRepository.findNewestBooks(PageRequest.of(0, 10));
     }
 }

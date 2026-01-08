@@ -39,6 +39,7 @@ public class ConversationService {
     /**
      * Save conversation history to Redis cache
      */
+    @SuppressWarnings("null")
     public void saveHistoryToCache(String conversationId, String history) {
         redisTemplate.opsForValue().set(
             "conversation:" + conversationId,

@@ -96,3 +96,71 @@
   letter-spacing: 0.2px;
   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12);
 }
+
+.theme-toggle {
+  position: relative;
+  width: 58px;
+  height: 30px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: linear-gradient(135deg, #0f172a, #111827);
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 6px;
+  gap: 6px;
+  cursor: pointer;
+  transition: background 0.3s ease, border-color 0.3s ease;
+  overflow: hidden;
+}
+
+.theme-toggle .icon {
+  font-size: 0.9rem;
+  color: #f5d742;
+  opacity: 0.65;
+  transition: opacity 0.3s ease, transform 0.35s ease;
+}
+
+.theme-toggle .icon.moon {
+  color: #9ec5ff;
+}
+
+.theme-toggle .toggle-handle {
+  position: absolute;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), #7c3aed);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+  transform: translateX(0);
+  transition: transform 0.35s ease, background 0.35s ease;
+  left: 3px;
+}
+
+.theme-toggle.is-dark .toggle-handle {
+  transform: translateX(26px);
+}
+
+.theme-toggle.is-dark {
+  background: linear-gradient(135deg, #0b1020, #0d1117);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.theme-toggle.is-dark .icon.sun {
+  opacity: 0.4;
+  transform: translateX(-6px);
+}
+
+.theme-toggle.is-dark .icon.moon {
+  opacity: 1;
+  transform: translateX(2px);
+}
+
+.theme-toggle:not(.is-dark) .icon.sun {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.theme-toggle:not(.is-dark) .icon.moon {
+  opacity: 0.4;
+  transform: translateX(6px);
+}

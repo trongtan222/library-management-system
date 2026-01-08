@@ -20,6 +20,7 @@ public class NotificationScheduler {
     private final EmailService emailService;
 
     // Chạy vào 8 giờ sáng mỗi ngày
+    @SuppressWarnings("null")
     @Scheduled(cron = "0 0 8 * * ?")
     public void sendDueDateReminders() {
         System.out.println("Running scheduled task: Sending due date reminders...");

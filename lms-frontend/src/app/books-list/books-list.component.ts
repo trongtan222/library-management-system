@@ -5,17 +5,19 @@ import { CirculationService } from '../services/circulation.service';
 import { ToastrService } from 'ngx-toastr';
 import { Book } from '../models/book';
 import { Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { takeUntil, finalize } from 'rxjs/operators';
 
 @Component({
-    selector: 'app-books-list',
-    templateUrl: './books-list.component.html',
-    styleUrls: ['./books-list.component.css'],
-    standalone: false
+  selector: 'app-books-list',
+  templateUrl: './books-list.component.html',
+  styleUrls: ['./books-list.component.css'],
+  standalone: false,
 })
 export class BooksListComponent implements OnInit, OnDestroy {
   books: Book[] = [];
   loading = new Set<number>();
+  listLoading = false;
+  skeletonRows = Array.from({ length: 8 });
   page = 1;
   pageSize = 10;
   totalPages = 0;
@@ -30,9 +32,9 @@ export class BooksListComponent implements OnInit, OnDestroy {
   showReserve = false;
   reservingBook: Book | null = null;
   reserveForm = { memberId: 0 };
-  
+
   bookToDelete: Book | null = null;
-  
+
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -42,7 +44,9 @@ export class BooksListComponent implements OnInit, OnDestroy {
     private toastr: ToastrService
   ) {}
 
-  ngOnInit(): void { this.loadBooks(); }
+  ngOnInit(): void {
+    this.loadBooks();
+  }
 
   ngOnDestroy(): void {
     this.destroy$.next();
@@ -51,29 +55,50 @@ export class BooksListComponent implements OnInit, OnDestroy {
 
   public loadBooks(goToPage: number = this.page) {
     this.page = goToPage;
-    this.booksService.getPublicBooks(false, this.searchTerm.trim() || null, null, this.page - 1, this.pageSize)
-      .pipe(takeUntil(this.destroy$))
+    this.listLoading = true;
+    this.booksService
+      .getPublicBooks(
+        false,
+        this.searchTerm.trim() || null,
+        null,
+        this.page - 1,
+        this.pageSize
+      )
+      .pipe(
+        takeUntil(this.destroy$),
+        finalize(() => (this.listLoading = false))
+      )
       .subscribe({
         next: (data: Page<Book>) => {
           this.books = data.content;
           this.totalPages = data.totalPages;
           this.totalElements = data.totalElements;
         },
-        error: (err) => this.toastError(err)
+        error: (err) => this.toastError(err),
       });
   }
 
-  setPage(p: number) { this.loadBooks(p); }
-  prevPage() { if (this.page > 1) this.loadBooks(this.page - 1); }
-  nextPage() { if (this.page < this.totalPages) this.loadBooks(this.page + 1); }
-  
-  changePageSize(event: any) { 
-    this.pageSize = +(event.target.value); 
-    this.loadBooks(1); 
+  setPage(p: number) {
+    this.loadBooks(p);
+  }
+  prevPage() {
+    if (this.page > 1) this.loadBooks(this.page - 1);
+  }
+  nextPage() {
+    if (this.page < this.totalPages) this.loadBooks(this.page + 1);
   }
 
-  updateBook(bookId: number) { this.router.navigate(['update-book', bookId]); }
-  bookDetails(bookId: number) { this.router.navigate(['book-details', bookId]); }
+  changePageSize(event: any) {
+    this.pageSize = +event.target.value;
+    this.loadBooks(1);
+  }
+
+  updateBook(bookId: number) {
+    this.router.navigate(['update-book', bookId]);
+  }
+  bookDetails(bookId: number) {
+    this.router.navigate(['book-details', bookId]);
+  }
 
   // --- Borrow Modal ---
   openBorrow(book: Book) {
@@ -92,16 +117,20 @@ export class BooksListComponent implements OnInit, OnDestroy {
     if (!this.borrowingBook) return;
     const { memberId, dueDate } = this.borrowForm;
     if (!memberId || !dueDate || memberId <= 0) {
-      return this.toastError({ message: 'Vui lòng nhập ID thành viên và ngày hết hạn hợp lệ.' });
+      return this.toastError({
+        message: 'Vui lòng nhập ID thành viên và ngày hết hạn hợp lệ.',
+      });
     }
-    
+
     const loanDays = this.daysFromToday(dueDate);
-    if (loanDays <= 0) return this.toastError({ message: 'Ngày hết hạn phải ở tương lai.' });
+    if (loanDays <= 0)
+      return this.toastError({ message: 'Ngày hết hạn phải ở tương lai.' });
 
     const bookId = this.borrowingBook.id;
     this.loading.add(bookId);
-    
-    this.circulation.loan({ bookId, memberId: Number(memberId), loanDays })
+
+    this.circulation
+      .loan({ bookId, memberId: Number(memberId), loanDays })
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
@@ -113,7 +142,7 @@ export class BooksListComponent implements OnInit, OnDestroy {
         error: (err) => {
           this.loading.delete(bookId);
           this.toastError(err);
-        }
+        },
       });
   }
 
@@ -133,27 +162,35 @@ export class BooksListComponent implements OnInit, OnDestroy {
   submitReserve() {
     if (!this.reservingBook) return;
     const { memberId } = this.reserveForm;
-    if (!memberId || memberId <= 0) return this.toastError({ message: 'Vui lòng nhập ID thành viên hợp lệ.' });
+    if (!memberId || memberId <= 0)
+      return this.toastError({
+        message: 'Vui lòng nhập ID thành viên hợp lệ.',
+      });
 
     const bookId = this.reservingBook.id;
     this.loading.add(bookId);
-    
-    this.circulation.reserve({ bookId, memberId: Number(memberId) })
+
+    this.circulation
+      .reserve({ bookId, memberId: Number(memberId) })
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
           this.loading.delete(bookId);
-          this.toastOk(`Đã đặt trước "${this.reservingBook?.name}" cho ID ${memberId}.`);
+          this.toastOk(
+            `Đã đặt trước "${this.reservingBook?.name}" cho ID ${memberId}.`
+          );
           this.closeReserve();
         },
         error: (err) => {
           this.loading.delete(bookId);
           this.toastError(err);
-        }
+        },
       });
   }
-  
-  isLoading(id: number) { return this.loading.has(id); }
+
+  isLoading(id: number) {
+    return this.loading.has(id);
+  }
 
   private defaultDueDate(addDays: number): string {
     const d = new Date();
@@ -168,25 +205,34 @@ export class BooksListComponent implements OnInit, OnDestroy {
     return Math.ceil((due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
   }
 
-  deleteBook(book: Book): void { this.bookToDelete = book; }
+  deleteBook(book: Book): void {
+    this.bookToDelete = book;
+  }
 
   confirmDelete(): void {
     if (!this.bookToDelete) return;
     const bookCopy = { ...this.bookToDelete };
     this.bookToDelete = null;
 
-    this.booksService.deleteBook(bookCopy.id)
+    this.booksService
+      .deleteBook(bookCopy.id)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
           this.toastOk(`Đã xóa sách "${bookCopy.name}".`);
           this.loadBooks(this.page);
         },
-        error: (err) => this.toastError(err)
+        error: (err) => this.toastError(err),
       });
   }
 
-  private toastOk(msg: string) { this.toastr.success(msg, 'Thành công'); }
+  trackByBookId(index: number, book: Book): number {
+    return book.id;
+  }
+
+  private toastOk(msg: string) {
+    this.toastr.success(msg, 'Thành công');
+  }
   private toastError(err: any) {
     const msg = err?.error?.message || err?.message || 'Đã có lỗi xảy ra.';
     this.toastr.error(msg, 'Lỗi');

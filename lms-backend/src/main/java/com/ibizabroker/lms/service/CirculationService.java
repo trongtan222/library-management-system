@@ -75,6 +75,7 @@ public class CirculationService {
 
     @Transactional
     public Loan returnBook(Integer loanId){
+        @SuppressWarnings("null")
         Loan loan = loanRepo.findById(loanId).orElseThrow(() -> new NotFoundException("Loan not found"));
         if(loan.getStatus() != LoanStatus.ACTIVE && loan.getStatus() != LoanStatus.OVERDUE) return loan;
         
@@ -98,6 +99,7 @@ public class CirculationService {
 
     @Transactional
     public Loan renewLoan(RenewRequest req){
+        @SuppressWarnings("null")
         Loan loan = loanRepo.findById(req.getLoanId()).orElseThrow(() -> new NotFoundException("Loan not found"));
         if(loan.getStatus() != LoanStatus.ACTIVE) throw new IllegalStateException("Loan is not active.");
         boolean isReservedByOthers = reservationRepo.existsByBookIdAndStatusAndMemberIdNot(
@@ -110,6 +112,7 @@ public class CirculationService {
 
     @Transactional
     public RenewalRequest requestRenewal(RenewRequest req, Integer memberId){
+        @SuppressWarnings("null")
         Loan loan = loanRepo.findById(req.getLoanId()).orElseThrow(() -> new NotFoundException("Loan not found"));
         if(!loan.getMemberId().equals(memberId)) throw new IllegalStateException("Không thể yêu cầu gia hạn cho khoản mượn của người khác");
         // Ngăn tạo trùng yêu cầu PENDING cho cùng loan
@@ -126,8 +129,10 @@ public class CirculationService {
 
     @Transactional
     public Loan approveRenewal(Long requestId, String note){
+        @SuppressWarnings("null")
         RenewalRequest rr = renewalRepo.findById(requestId).orElseThrow(() -> new NotFoundException("Renewal request not found"));
         if(rr.getStatus()!=RenewalStatus.PENDING) throw new IllegalStateException("Request already decided");
+        @SuppressWarnings("null")
         Loan loan = loanRepo.findById(rr.getLoanId()).orElseThrow(() -> new NotFoundException("Loan not found"));
         boolean isReservedByOthers = reservationRepo.existsByBookIdAndStatusAndMemberIdNot(
             loan.getBookId(), ReservationStatus.ACTIVE, loan.getMemberId());
@@ -143,6 +148,7 @@ public class CirculationService {
 
     @Transactional
     public RenewalRequest rejectRenewal(Long requestId, String note){
+        @SuppressWarnings("null")
         RenewalRequest rr = renewalRepo.findById(requestId).orElseThrow(() -> new NotFoundException("Renewal request not found"));
         if(rr.getStatus()!=RenewalStatus.PENDING) throw new IllegalStateException("Request already decided");
         rr.setStatus(RenewalStatus.REJECTED);
@@ -166,6 +172,7 @@ public class CirculationService {
 
     @Transactional
     public void cancelReservation(Integer reservationId){
+        @SuppressWarnings("null")
         Reservation r = reservationRepo.findById(reservationId).orElseThrow(() -> new NotFoundException("Reservation not found"));
         r.setStatus(ReservationStatus.CANCELLED);
         reservationRepo.save(r);

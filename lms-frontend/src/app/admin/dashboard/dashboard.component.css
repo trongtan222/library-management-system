@@ -12,11 +12,19 @@
 
 .stat-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15);
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
 }
 
-/* Đảm bảo mọi thành phần con trong thẻ đều có màu trắng */
-.stat-card * {
+/* Đảm bảo mọi thành phần con trong thẻ đều có màu trắng (chỉ text, không ảnh hưởng chart) */
+.stat-card h1,
+.stat-card h2,
+.stat-card h3,
+.stat-card h4,
+.stat-card h5,
+.stat-card h6,
+.stat-card p,
+.stat-card span,
+.stat-card a {
   color: #fff !important;
 }
 
@@ -33,19 +41,20 @@
 
 .active-card {
   transform: translateY(-2px);
-  box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.2), 0 0 0 3px rgba(255,255,255,0.5);
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.2),
+    0 0 0 3px rgba(255, 255, 255, 0.5);
   border: 2px solid #fff;
 }
 
 /* --- Styles cho Bảng dữ liệu (Table) --- */
 /* Ghi đè màu chữ cho bảng trong dark mode */
 .table {
-  --bs-table-color: #e0e0e0; /* Màu chữ sáng */
+  --bs-table-color: #000000; /* Màu chữ đen */
   --bs-table-bg: transparent;
   --bs-table-border-color: #373b3e;
-  --bs-table-hover-color: #fff;
-  --bs-table-hover-bg: rgba(255,255,255,0.05);
-  color: #e0e0e0 !important;
+  --bs-table-hover-color: #000;
+  --bs-table-hover-bg: rgba(255, 255, 255, 0.15);
+  color: #000000 !important;
 }
 
 /* Header bảng */
@@ -57,14 +66,15 @@
 
 /* Nội dung bảng */
 .table tbody td {
-  color: #e0e0e0 !important; /* Màu chữ nội dung */
+  color: #000000 !important; /* Màu chữ nội dung đen */
   vertical-align: middle;
+  background-color: #ffffff !important; /* Background trắng để text đen hiển thị rõ */
 }
 
 /* Hàng trong bảng khi hover */
 .table-hover tbody tr:hover {
-  color: #fff !important;
-  background-color: rgba(255,255,255,0.1) !important;
+  color: #000 !important;
+  background-color: #f5f5f5 !important;
 }
 
 /* --- Card chứa bảng (Chi tiết) --- */
@@ -94,6 +104,12 @@
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

@@ -27,6 +27,20 @@
   --radius-sm: 8px;
 }
 
+body.light-theme {
+  --bg: #f6f8fb;
+  --bg-soft: #eef1f7;
+  --card: rgba(255, 255, 255, 0.9);
+  --border: rgba(15, 23, 42, 0.12);
+  --text: #0f172a;
+  --text-muted: #4b5563;
+  --accent: #2563eb;
+  --accent-2: #9333ea;
+  --danger: #dc2626;
+  --success: #16a34a;
+  --warning: #eab308;
+}
+
 /* 2) Base + Typography */
 * {
   box-sizing: border-box;
@@ -47,6 +61,15 @@ body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+body.light-theme {
+  color-scheme: light;
+}
+
+body.dark-theme {
+  color-scheme: dark;
 }
 
 /* Links */
@@ -67,7 +90,7 @@ h3,
 h4,
 h5,
 h6 {
-  color: #f0f6fc;
+  color: var(--text);
   font-weight: 700;
 }
 

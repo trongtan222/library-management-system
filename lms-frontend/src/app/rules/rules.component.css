@@ -1,27 +1,27 @@
 :host {
   display: block;
-  background-color: var(--bg-body, #0d1117); /* Fallback color */
-  color: var(--text, #c9d1d9);
+  background-color: #ffffff;
+  color: #0f172a;
   min-height: 100vh;
 }
 
 .rules-header {
-  background: linear-gradient(135deg, #1f2428 0%, #24292e 100%);
+  background: linear-gradient(135deg, #e8f1ff 0%, #f6f8fc 100%);
   padding: 4rem 0;
   text-align: center;
-  border-bottom: 1px solid var(--border, #30363d);
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .rules-header h1 {
   font-size: 2.5rem;
-  color: #f0f6fc;
+  color: #0f172a;
   font-weight: 800;
   margin-bottom: 0.5rem;
   text-transform: uppercase;
 }
 
 .rules-header p {
-  color: var(--accent, #58a6ff);
+  color: #2563eb;
   font-size: 1.2rem;
   font-weight: 600;
 }
@@ -34,25 +34,25 @@
 }
 
 .rule-section {
-  background-color: #161b22;
-  border: 1px solid var(--border, #30363d);
-  border-radius: 8px;
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
   padding: 2rem;
   margin-bottom: 2rem;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
 }
 
 .rule-section h2 {
-  color: #f0f6fc;
+  color: #0f172a;
   font-size: 1.5rem;
-  border-bottom: 2px solid var(--accent, #58a6ff);
+  border-bottom: 2px solid #2563eb;
   padding-bottom: 0.5rem;
   margin-bottom: 1.5rem;
 }
 
 .rule-section h2 i {
   margin-right: 10px;
-  color: var(--accent, #58a6ff);
+  color: #2563eb;
 }
 
 .rule-section ul {
@@ -69,7 +69,7 @@
 
 .rule-section ul li::before {
   content: "•";
-  color: var(--accent, #58a6ff);
+  color: #2563eb;
   font-weight: bold;
   position: absolute;
   left: 0;
@@ -80,9 +80,9 @@
 .rule-section ul ul {
   margin-top: 0.5rem;
   padding-left: 1rem;
-  background: rgba(255,255,255,0.03);
+  background: #f8fafc;
   padding: 1rem;
-  border-radius: 6px;
+  border-radius: 8px;
 }
 
 .signature {
@@ -90,4 +90,5 @@
   margin-top: 3rem;
   margin-right: 2rem;
   font-size: 1.1rem;
+  color: #0f172a;
 }

@@ -1,24 +1,86 @@
 # Copilot Instructions
 
-- **Architecture**: Spring Boot 3.5 (Java 21) monolith in `lms-backend` plus Angular 14 SPA in `lms-frontend`; MySQL for persistence, Redis for chatbot cache/rate-limit, optional Gmail SMTP; OpenAPI served at `/swagger-ui`.
-- **Backend layout**: Controllers in `controller/` map to services in `service/` and repositories in `dao/`; DTOs in `dto/`; entities in `entity/`; security + CORS/JWT in `configuration/`; utility JWT helpers in `util/`.
-- **Security model**: JWT auth via `JwtRequestFilter` and `JwtUtil`; public routes are `/api/auth/**` and `/api/public/**`; `/api/user/**` requires `ROLE_USER` or `ROLE_ADMIN`; `/api/admin/**` requires `ROLE_ADMIN`; chatbot at `/api/user/chat/**` is authenticated; CORS allows `http://localhost:4200`.
-- **Chatbot flow**: `ChatbotController` builds context from `ConversationService` (Redis-backed history cache, DB fallback) and `RagService` keyword-based book context, then calls Google Gemini (`gemini.api.key` or service account). `ChatRateLimiter` (Redis preferred; memory fallback) enforces `chat.rate.*` props; adjust env if throttling.
-- **Data seeding**: `application.properties` disables SQL init; `application-dev.properties` enables `spring.sql.init.mode=always` and `data.sql` sample catalog. Use `SPRING_PROFILES_ACTIVE=dev` when you need seed data locally.
-- **Database defaults**: JDBC URL defaults to `localhost:3307/lms_db`; docker-compose maps MySQL on host `3308` -> container `3306` (update URL accordingly). Credentials default to root/no password unless overridden.
-- **JWT settings**: Configure `APP_JWT_SECRET` (dev fallback present) and `app.jwt-expiration`; tokens carry `userId` + roles claims and power method security.
-- **Redis**: Defaults `localhost:6379`; docker-compose service named `redis`. Missing Redis triggers in-memory fallback for rate limiting but conversation caching will fail.
-- **Mail**: Uses `spring-boot-starter-mail`; supply `MAIL_USERNAME`/`MAIL_PASSWORD` for password reset flows.
-- **Angular client**: API base set in `src/environments/environment*.ts` (`apiBaseUrl`); dev uses `http://localhost:8080/api`. Google Books API key placeholder present—do not commit secrets.
-- **Build/test commands**: Java 21 enforced by Maven Enforcer. Typical flow: `cd lms-backend && mvn clean test` (requires DB up), `mvn spring-boot:run` for dev; `cd lms-frontend && npm install && ng serve`. Docker: `docker-compose up --build` exposes backend `8081`, frontend `80`, MySQL `3308`, Redis `6379`.
-- **Logging**: Logs to `logs/application.log`; dev profile increases verbosity (`DEBUG` for web/security/jpa). Adjust via `application-dev.properties`.
-- **Notable controllers**: `AuthController` handles register/login/forgot/reset; `BooksController`, `Admin*Controller`, `CirculationController`, `WishlistController`, `ReportController`, `ReviewController`, `ChatbotController` cover domain endpoints; `ApiExceptionHandler` centralizes error responses.
-- **Service conventions**: Business logic sits in `service/` with `@Transactional` boundaries; repositories are Spring Data interfaces; prefer DTOs in request/response bodies rather than entities.
-- **RAG details**: `RagService` currently does simple keyword search over books/authors/categories and formats context; consider this when improving answers or augmenting prompts.
-- **Testing/data**: Tests in `src/test/java`; many integration tests expect database connectivity. Use dev profile or provide test containers/DB to avoid failures.
-- **Front/back integration**: JWT is stored client-side and sent as `Authorization: Bearer <token>`; forbidden redirects handled in Angular guards/components under `app/auth` and `app/forbidden`.
-- **Ports & URLs**: Backend defaults 8080, frontend dev 4200; docker-compose backend 8081. Update CORS origins if you change frontend host/port.
-- **Performance/limits**: Chat endpoints may return 429 when `ChatRateLimiter` thresholds hit; tweak `chat.rate.window-millis` and `chat.rate.max-requests` in env.
-- **Docs/shortcuts**: Root `README.md` covers stack and setup; `docker-compose.yml` captures full stack; API docs at `/swagger-ui` once backend is running.
+## Architecture
 
-Suggest improvements or flag gaps if anything here feels incomplete or outdated.
+**Stack**: Spring Boot 3.5 (Java 21) + Angular 14 SPA + MySQL + Redis
+
+```
+lms-backend/src/main/java/com/ibizabroker/lms/
+├── controller/   # REST endpoints (@RestController)
+├── service/      # Business logic (@Transactional)
+├── dao/          # Spring Data JPA repositories
+├── dto/          # Request/response objects with validation
+├── entity/       # JPA entities
+├── configuration/# Security, CORS, beans
+└── exceptions/   # Custom exceptions
+
+lms-frontend/src/app/
+├── services/     # HTTP clients (inject into components)
+├── auth/         # Guards, interceptors, JWT handling
+└── [feature]/    # Feature modules (admin/, chatbot/, etc.)
+```
+
+## Security Patterns
+
+- **Route protection** (`WebSecurityConfiguration.java`):
+  - `/api/auth/**`, `/api/public/**` → no auth
+  - `/api/user/**` → `hasAnyRole("USER", "ADMIN")`
+  - `/api/admin/**` → `hasRole("ADMIN")`
+- **Method-level security**: Use `@PreAuthorize` (NOT `@Secured`) — see existing controllers
+  - Admin: `@PreAuthorize("hasRole('ADMIN')")` or `@PreAuthorize("hasRole('ROLE_ADMIN')")`
+  - User: `@PreAuthorize("hasRole('USER')")` or `@PreAuthorize("isAuthenticated()")`
+- **JWT**: Handled by `JwtRequestFilter` → `JwtUtil`; token in `Authorization: Bearer <token>`
+
+## Code Conventions
+
+- **Services**: Constructor injection with `@RequiredArgsConstructor` (Lombok); mark read-only methods `@Transactional(readOnly = true)`
+- **Controllers return DTOs**, not entities—avoid lazy-loading issues and data exposure
+- **Validation**: Use Jakarta annotations (`@NotEmpty`, `@Min`, etc.) in DTOs; errors caught by `ApiExceptionHandler`
+- **Error handling**: Throw `NotFoundException`, `IllegalStateException`, etc.—`ApiExceptionHandler` converts to JSON with HTTP status
+- **N+1 fix pattern**: Use `@EntityGraph` or `@BatchSize(size = 20)` on entity collections (see `Books.java`, `BooksRepository.java`)
+- **Vietnamese locale**: Some error messages and DTOs use Vietnamese—maintain consistency or ask user for preference
+
+## Build & Run
+
+```bash
+# Backend (requires MySQL on 3306/3307, optional Redis on 6379)
+cd lms-backend && mvn spring-boot:run -Dspring.profiles.active=dev
+
+# Frontend (dev server on :4200)
+cd lms-frontend && npm install && npm start
+
+# Full stack via Docker
+docker-compose up --build  # backend:8081, frontend:80, MySQL:3308, Redis:6379
+```
+
+## Environment Variables
+
+| Variable                 | Default                              | Purpose                        |
+| ------------------------ | ------------------------------------ | ------------------------------ |
+| `DB_URL`                 | `jdbc:mysql://localhost:3307/lms_db` | MySQL connection               |
+| `APP_JWT_SECRET`         | dev fallback                         | JWT signing key (32+ bytes)    |
+| `GEMINI_API_KEY`         | none                                 | Chatbot AI (required for chat) |
+| `REDIS_HOST/PORT`        | localhost:6379                       | Rate limiting & cache          |
+| `MAIL_USERNAME/PASSWORD` | none                                 | Password reset emails          |
+
+Use `application-dev.properties` for local overrides; activate with `SPRING_PROFILES_ACTIVE=dev`.
+
+## Key Files
+
+| Purpose                    | File                                                            |
+| -------------------------- | --------------------------------------------------------------- |
+| Security config            | `configuration/WebSecurityConfiguration.java`                   |
+| JWT utils                  | `util/JwtUtil.java`                                             |
+| Global error handler       | `controller/ApiExceptionHandler.java`                           |
+| Chatbot flow               | `controller/ChatbotController.java` → `service/RagService.java` |
+| Entity example (N+1 fixed) | `entity/Books.java`, `dao/BooksRepository.java`                 |
+| Frontend API base          | `environments/environment.ts` (`apiBaseUrl`)                    |
+| Frontend JWT interceptor   | `auth/auth.interceptor.ts`                                      |
+
+## Common Tasks
+
+- **Add new endpoint**: Create controller method → add service method → use DTO for request/response
+- **Add admin-only endpoint**: Use `@PreAuthorize("hasRole('ADMIN')")` at method or class level
+- **Add new entity**: Create entity in `entity/`, repository in `dao/`, then service/controller as needed
+- **Run tests**: `cd lms-backend && mvn test` (requires running MySQL)
+- **Debug auth issues**: Check `JwtRequestFilter` logs, verify token format, check role names (with/without `ROLE_` prefix)

@@ -4,6 +4,8 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 
+import java.util.List;
+
 public class ReviewDto {
     public Integer id;
     public Integer bookId;
@@ -17,10 +19,15 @@ public class ReviewDto {
     public Integer rating;
     
     public String comment;
+    public List<String> images; // Danh sách URLs ảnh
     public boolean approved;
     public String createdAt;
+    public Long likesCount;
+    public Long commentsCount;
+    public Boolean currentUserLiked; // User hiện tại đã like chưa
 
     // Getters để controller có thể truy cập
     public Integer getRating() { return rating; }
     public String getComment() { return comment; }
+    public List<String> getImages() { return images; }
 }

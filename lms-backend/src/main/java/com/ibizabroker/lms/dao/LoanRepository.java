@@ -103,4 +103,35 @@ public interface LoanRepository extends JpaRepository<Loan, Integer> {
        // Tổng tiền phạt chưa thanh toán
        @Query("SELECT COALESCE(SUM(l.fineAmount), 0) FROM Loan l WHERE l.fineStatus = 'UNPAID'")
        BigDecimal getTotalUnpaidFines();
+
+    // === Report Export Queries ===
+    
+    @Query("SELECT new com.ibizabroker.lms.dto.LoanDetailsDto(" +
+           "l.id, b.name, u.name, l.loanDate, l.dueDate, l.returnDate, l.status, " +
+           "l.fineAmount, " +
+           "CAST(" +
+           "  CASE " +
+           "    WHEN l.returnDate IS NOT NULL AND l.returnDate > l.dueDate " +
+           "      THEN FUNCTION('DATEDIFF', l.returnDate, l.dueDate) " +
+           "    WHEN l.status = com.ibizabroker.lms.entity.LoanStatus.OVERDUE " +
+           "      THEN FUNCTION('DATEDIFF', CURRENT_DATE, l.dueDate) " +
+           "    ELSE 0 " +
+           "  END AS long" +
+           ") ) " +
+           "FROM Loan l JOIN Books b ON l.bookId = b.id JOIN Users u ON l.memberId = u.userId " +
+           "WHERE l.loanDate BETWEEN :startDate AND :endDate " +
+           "ORDER BY l.loanDate DESC")
+    List<LoanDetailsDto> findLoanDetailsForReport(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+
+    @Query("SELECT COUNT(l) FROM Loan l WHERE l.loanDate BETWEEN :startDate AND :endDate")
+    long countByDateRange(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+
+    @Query("SELECT COUNT(l) FROM Loan l WHERE l.status = 'RETURNED' AND l.returnDate BETWEEN :startDate AND :endDate")
+    long countReturnedByDateRange(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+
+    @Query("SELECT COUNT(l) FROM Loan l WHERE l.status = 'OVERDUE' AND l.loanDate BETWEEN :startDate AND :endDate")
+    long countOverdueByDateRange(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+
+    @Query("SELECT COALESCE(SUM(l.fineAmount), 0) FROM Loan l WHERE l.returnDate BETWEEN :startDate AND :endDate")
+    BigDecimal sumFinesByDateRange(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
 }

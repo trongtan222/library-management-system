@@ -33,37 +33,168 @@ import { ImportExportComponent } from './admin/import-export/import-export.compo
 import { AdminNewsComponent } from './admin/admin-news/admin-news.component';
 import { RenewalsComponent } from './admin/renewals/renewals.component';
 import { RulesComponent } from './rules/rules.component';
+import { GamificationComponent } from './gamification/gamification.component';
 
 const routes: Routes = [
   // ADMIN pages
-  { path: 'books', component: BooksListComponent, canActivate: [AuthGuard], data: { roles: ['Admin'] } },
-  { path: 'create-book', component: CreateBookComponent, canActivate: [AuthGuard], data: { roles: ['Admin'] } },
-  { path: 'update-book/:bookId', component: UpdateBookComponent, canActivate: [AuthGuard], data: { roles: ['Admin'] } },
-  { path: 'book-details/:bookId', component: BookDetailsComponent, canActivate: [AuthGuard], data: { roles: ['Admin'] } },
-  { path: 'users', component: UsersListComponent, canActivate: [AuthGuard], data: { roles: ['Admin'] } },
-  { path: 'create-user', component: CreateUserComponent, canActivate: [AuthGuard], data: { roles: ['Admin'] } }, // <-- THÊM ROUTE
-  { path: 'user-details/:userId', component: UserDetailsComponent, canActivate: [AuthGuard], data: { roles: ['Admin'] } },
-  { path: 'update-user/:userId', component: UpdateUserComponent, canActivate: [AuthGuard], data: { roles: ['Admin'] } },
-  { path: 'admin/dashboard', component: DashboardComponent, canActivate: [AuthGuard], data: { roles: ['Admin'] } },
-  { path: 'admin/loans', component: LoanManagementComponent, canActivate: [AuthGuard], data: { roles: ['Admin'] } },
-  { path: 'admin/fines', component: ManageFinesComponent, canActivate: [AuthGuard], data: { roles: ['Admin'] } },
-  { path: 'admin/reviews', component: ManageReviewsComponent, canActivate: [AuthGuard], data: { roles: ['Admin'] } },
-  { path: 'admin/categories', component: ManageCategoriesComponent, canActivate: [AuthGuard], data: { roles: ['Admin'] } },
-  { path: 'admin/authors', component: ManageAuthorsComponent, canActivate: [AuthGuard], data: { roles: ['Admin'] } },
-  { path: 'admin/import-export', component: ImportExportComponent, canActivate: [AuthGuard], data: { roles: ['Admin'] } },
-  { path: 'admin/news', component: AdminNewsComponent, canActivate: [AuthGuard], data: { roles: ['Admin'] } },
-  { path: 'admin/create-loan', component: CreateLoanComponent, canActivate: [AuthGuard], data: { roles: ['Admin'] } },
-  { path: 'admin/scanner', component: AdminScannerComponent, canActivate: [AuthGuard], data: { roles: ['Admin'] } },
-  { path: 'admin/settings', component: AdminSettingsComponent, canActivate: [AuthGuard], data: { roles: ['Admin'] } },
-  { path: 'admin/renewals', component: RenewalsComponent, canActivate: [AuthGuard], data: { roles: ['Admin'] } },
-
+  {
+    path: 'books',
+    component: BooksListComponent,
+    canActivate: [AuthGuard],
+    data: { roles: ['ROLE_ADMIN'] },
+  },
+  {
+    path: 'create-book',
+    component: CreateBookComponent,
+    canActivate: [AuthGuard],
+    data: { roles: ['ROLE_ADMIN'] },
+  },
+  {
+    path: 'update-book/:bookId',
+    component: UpdateBookComponent,
+    canActivate: [AuthGuard],
+    data: { roles: ['ROLE_ADMIN'] },
+  },
+  {
+    path: 'book-details/:bookId',
+    component: BookDetailsComponent,
+    canActivate: [AuthGuard],
+    data: { roles: ['ROLE_ADMIN'] },
+  },
+  {
+    path: 'users',
+    component: UsersListComponent,
+    canActivate: [AuthGuard],
+    data: { roles: ['ROLE_ADMIN'] },
+  },
+  {
+    path: 'create-user',
+    component: CreateUserComponent,
+    canActivate: [AuthGuard],
+    data: { roles: ['ROLE_ADMIN'] },
+  }, // <-- THÊM ROUTE
+  {
+    path: 'user-details/:userId',
+    component: UserDetailsComponent,
+    canActivate: [AuthGuard],
+    data: { roles: ['ROLE_ADMIN'] },
+  },
+  {
+    path: 'update-user/:userId',
+    component: UpdateUserComponent,
+    canActivate: [AuthGuard],
+    data: { roles: ['ROLE_ADMIN'] },
+  },
+  {
+    path: 'admin/dashboard',
+    component: DashboardComponent,
+    canActivate: [AuthGuard],
+    data: { roles: ['ROLE_ADMIN'] },
+  },
+  {
+    path: 'admin/loans',
+    component: LoanManagementComponent,
+    canActivate: [AuthGuard],
+    data: { roles: ['ROLE_ADMIN'] },
+  },
+  {
+    path: 'admin/fines',
+    component: ManageFinesComponent,
+    canActivate: [AuthGuard],
+    data: { roles: ['ROLE_ADMIN'] },
+  },
+  {
+    path: 'admin/reviews',
+    component: ManageReviewsComponent,
+    canActivate: [AuthGuard],
+    data: { roles: ['ROLE_ADMIN'] },
+  },
+  {
+    path: 'admin/categories',
+    component: ManageCategoriesComponent,
+    canActivate: [AuthGuard],
+    data: { roles: ['ROLE_ADMIN'] },
+  },
+  {
+    path: 'admin/authors',
+    component: ManageAuthorsComponent,
+    canActivate: [AuthGuard],
+    data: { roles: ['ROLE_ADMIN'] },
+  },
+  {
+    path: 'admin/import-export',
+    component: ImportExportComponent,
+    canActivate: [AuthGuard],
+    data: { roles: ['ROLE_ADMIN'] },
+  },
+  {
+    path: 'admin/news',
+    component: AdminNewsComponent,
+    canActivate: [AuthGuard],
+    data: { roles: ['ROLE_ADMIN'] },
+  },
+  {
+    path: 'admin/create-loan',
+    component: CreateLoanComponent,
+    canActivate: [AuthGuard],
+    data: { roles: ['ROLE_ADMIN'] },
+  },
+  {
+    path: 'admin/scanner',
+    component: AdminScannerComponent,
+    canActivate: [AuthGuard],
+    data: { roles: ['ROLE_ADMIN'] },
+  },
+  {
+    path: 'admin/settings',
+    component: AdminSettingsComponent,
+    canActivate: [AuthGuard],
+    data: { roles: ['ROLE_ADMIN'] },
+  },
+  {
+    path: 'admin/renewals',
+    component: RenewalsComponent,
+    canActivate: [AuthGuard],
+    data: { roles: ['ROLE_ADMIN'] },
+  },
 
   // USER pages
-  { path: 'borrow-book', component: BorrowBookComponent, canActivate: [AuthGuard], data: { roles: ['User'] } },
-  { path: 'return-book', component: ReturnBookComponent, canActivate: [AuthGuard], data: { roles: ['User'] } },
-  { path: 'books/:id', component: BookDetailsComponent, canActivate: [AuthGuard], data: { roles: ['User', 'Admin'] } },
-  { path: 'my-account', component: MyAccountComponent, canActivate: [AuthGuard], data: { roles: ['User'] } },
-  { path: 'wishlist', component: WishlistComponent, canActivate: [AuthGuard], data: { roles: ['User'] } },
+  {
+    path: 'borrow-book',
+    component: BorrowBookComponent,
+    canActivate: [AuthGuard],
+    data: { roles: ['ROLE_USER', 'ROLE_ADMIN'] },
+  },
+  {
+    path: 'return-book',
+    component: ReturnBookComponent,
+    canActivate: [AuthGuard],
+    data: { roles: ['ROLE_USER', 'ROLE_ADMIN'] },
+  },
+  {
+    path: 'books/:id',
+    component: BookDetailsComponent,
+    canActivate: [AuthGuard],
+    data: { roles: ['ROLE_USER', 'ROLE_ADMIN'] },
+  },
+  {
+    path: 'my-account',
+    component: MyAccountComponent,
+    canActivate: [AuthGuard],
+    data: { roles: ['ROLE_USER', 'ROLE_ADMIN'] },
+  },
+  {
+    path: 'wishlist',
+    component: WishlistComponent,
+    canActivate: [AuthGuard],
+    data: { roles: ['ROLE_USER', 'ROLE_ADMIN'] },
+  },
+  {
+    path: 'gamification',
+    component: GamificationComponent,
+    canActivate: [AuthGuard],
+    data: { roles: ['ROLE_USER', 'ROLE_ADMIN'] },
+  },
 
   // public
   { path: 'register', component: SignupComponent },
@@ -78,6 +209,6 @@ const routes: Routes = [
 
 @NgModule({
   imports: [RouterModule.forRoot(routes)],
-  exports: [RouterModule]
+  exports: [RouterModule],
 })
-export class AppRoutingModule { }
+export class AppRoutingModule {}

@@ -30,13 +30,22 @@ services:
     restart: on-failure
     environment:
       # Cấu hình đè lên application.properties
+      SPRING_PROFILES_ACTIVE: dev
       SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/lms_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: root
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
-      # API Key của bạn (Lấy từ application.properties local dán vào đây)
-      GEMINI_API_KEY: AIzaSyAWQ-HL34H2YSZfejB2s-RB8Oq_H_uQvvE
+      APP_JWT_SECRET: change-me-please-change-me-32-bytes
+      GEMINI_API_KEY: ""
+      GOOGLE_API_KEY: ""
+      MAIL_USERNAME: ""
+      MAIL_PASSWORD: ""
+      PINECONE_API_KEY: ""
+      PINECONE_INDEX_URL: ""
+      PINECONE_ENVIRONMENT: ""
+      PINECONE_INDEX: lms-index
+      PINECONE_NAMESPACE: default
 
   # 4. Frontend
   frontend:

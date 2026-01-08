@@ -75,6 +75,7 @@ public class UserService {
         return usersRepository.save(user);
     }
 
+    @SuppressWarnings("null")
     public void deleteUser(Integer id) {
         Users user = getUserById(id);
         usersRepository.delete(user);

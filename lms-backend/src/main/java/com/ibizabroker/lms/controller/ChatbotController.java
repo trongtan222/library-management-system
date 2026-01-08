@@ -48,6 +48,7 @@ public class ChatbotController {
     /**
      * Main chat endpoint with RAG support (ĐÃ CHUYỂN SANG ĐỒNG BỘ)
      */
+    @SuppressWarnings("null")
     @PostMapping
     @Operation(summary = "Ask chatbot", description = "Sends a prompt to the chatbot and returns an answer.")
     @ApiResponse(responseCode = "200", description = "Answer returned")
@@ -160,6 +161,7 @@ public class ChatbotController {
     /**
      * Get conversation history
      */
+    @SuppressWarnings("null")
     @GetMapping("/history/{conversationId}")
     @Operation(summary = "Get conversation history")
     public ResponseEntity<String> getConversationHistory(@PathVariable String conversationId) {
@@ -191,6 +193,7 @@ public class ChatbotController {
     /**
      * Get list of user's conversations
      */
+    @SuppressWarnings("null")
     @GetMapping("/conversations")
     @Operation(summary = "List user's conversations")
     public ResponseEntity<String> getUserConversations() {
@@ -300,6 +303,7 @@ public class ChatbotController {
         long backoffMs = 500;
         for (int attempt = 1; attempt <= maxAttempts; attempt++) {
             try {
+                @SuppressWarnings("null")
                 ResponseEntity<String> geminiResponse = restTemplate.exchange(
                         finalUrl,
                         HttpMethod.POST,
@@ -340,6 +344,7 @@ public class ChatbotController {
         return errorResponse(HttpStatus.BAD_REQUEST, message, conversationId);
     }
 
+    @SuppressWarnings("null")
     private ResponseEntity<String> errorResponse(HttpStatusCode status, String message, String conversationId) {
         String errorJson = objectToJson(Map.of(
             "status", "error",

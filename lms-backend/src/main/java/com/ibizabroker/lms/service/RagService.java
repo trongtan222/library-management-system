@@ -1,51 +1,57 @@
 package com.ibizabroker.lms.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ibizabroker.lms.dao.BooksRepository;
-import com.ibizabroker.lms.entity.Books;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.apache.hc.client5.http.classic.methods.HttpPost;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.core5.http.ContentType;
+import org.apache.hc.core5.http.io.entity.StringEntity;
+import org.apache.hc.core5.http.io.entity.EntityUtils;
+
+import java.util.HashMap;
 import java.util.List;
-import java.util.stream.Collectors;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
 public class RagService {
-    
+
     private final BooksRepository booksRepository;
+    private final ObjectMapper objectMapper;
+
+    @Value("${gemini.api.key:}")
+    private String geminiApiKey;
 
     /**
-     * Retrieve relevant books based on user query using simple keyword matching
-     * In production, this would use vector embeddings and semantic search
+     * Retrieve context from database using simple text search
      */
-    @Transactional(readOnly = true)
     public String retrieveContext(String userQuery) {
-        String queryLower = userQuery.toLowerCase();
+        try {
+            // Simple text search in database
+            List<com.ibizabroker.lms.entity.Books> books = booksRepository.findAll().stream()
+                    .filter(book -> book.getName().toLowerCase().contains(userQuery.toLowerCase()) ||
+                            (book.getIsbn() != null && book.getIsbn().contains(userQuery)))
+                    .limit(5)
+                    .toList();
 
-        // Limit to top 5 books to keep token size small
-        Pageable topFive = PageRequest.of(0, 5);
+            if (books == null || books.isEmpty()) {
+                return "No relevant information found in the library database.";
+            }
 
-        // Use repository query to avoid N+1 and pull only needed rows
-        List<Books> books = booksRepository.findWithFiltersAndPagination(queryLower, null, false, topFive)
-            .getContent();
-        
-        // Format context for RAG
-        if (books.isEmpty()) {
-            return "No specific books found in library matching the query.";
+            StringBuilder context = new StringBuilder();
+            books.forEach(book -> {
+                context.append("Title: ").append(book.getName()).append(" | ");
+                context.append("ISBN: ").append(book.getIsbn()).append("\n");
+            });
+
+            return context.toString();
+        } catch (Exception e) {
+            return "Error retrieving context: " + e.getMessage();
         }
-        
-        StringBuilder context = new StringBuilder("Relevant books in our library:\n");
-        for (Books book : books) {
-            context.append("- ").append(book.getName())
-                .append(" by ").append(book.getAuthors().stream()
-                    .map(a -> a.getName())
-                    .collect(Collectors.joining(", ")))
-                .append(" (Available: ").append(book.getNumberOfCopiesAvailable()).append(" copies)\n");
-        }
-        
-        return context.toString();
     }
 
     /**
@@ -54,16 +60,75 @@ public class RagService {
     public String buildAugmentedPrompt(String userQuery) {
         String context = retrieveContext(userQuery);
 
-        return new StringBuilder()
-            .append("You are a helpful library assistant for a Library Management System.\n")
-            .append("Provide helpful, concise answers about books and library services.\n")
-            .append("If asked about borrowing, mention users can borrow books through the system.\n")
-            .append("If asked about specific books, check the library inventory below.\n\n")
-            .append("=== LIBRARY CONTEXT ===\n")
-            .append(context)
-            .append("\n=== USER QUESTION ===\n")
-            .append(userQuery)
-            .append("\n\nPlease answer the user's question in Vietnamese.")
-            .toString();
+        return """
+                You are a smart Library Assistant.
+                User Question: %s
+
+                Use the following information about books in our library to answer:
+                %s
+
+                If the answer is not in the context, politely say you don't know.
+                Answer in Vietnamese.
+                """.formatted(userQuery, context);
+    }
+
+    /**
+     * Ask AI using Gemini API via HTTP call
+     */
+    @SuppressWarnings("unchecked")
+    public String askAi(String userQuery) {
+        try {
+            if (geminiApiKey == null || geminiApiKey.trim().isEmpty()) {
+                return "Gemini API key not configured. Please set GOOGLE_API_KEY environment variable.";
+            }
+
+            String prompt = buildAugmentedPrompt(userQuery);
+            String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + geminiApiKey;
+
+            // Build request payload for Gemini API
+            Map<String, Object> requestBody = new HashMap<>();
+            Map<String, Object> contents = new HashMap<>();
+            Map<String, Object> parts = new HashMap<>();
+            
+            parts.put("text", prompt);
+            List<Map<String, Object>> partsList = List.of(parts);
+            contents.put("parts", partsList);
+            requestBody.put("contents", List.of(contents));
+
+            String jsonPayload = objectMapper.writeValueAsString(requestBody);
+
+            // Make HTTP POST request to Gemini API
+            try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+                HttpPost httpPost = new HttpPost(url);
+                httpPost.setHeader("Content-Type", "application/json");
+                httpPost.setEntity(new StringEntity(jsonPayload, ContentType.APPLICATION_JSON));
+
+                var response = httpClient.execute(httpPost, httpResponse -> {
+                    String responseBody = EntityUtils.toString(httpResponse.getEntity());
+                    
+                    // Parse Gemini response
+                    try {
+                        Map<String, Object> responseMap = objectMapper.readValue(responseBody, Map.class);
+                        List<Map<String, Object>> candidates = (List<Map<String, Object>>) responseMap.get("candidates");
+                        if (candidates != null && !candidates.isEmpty()) {
+                            Map<String, Object> candidate = candidates.get(0);
+                            Map<String, Object> content = (Map<String, Object>) candidate.get("content");
+                            List<Map<String, Object>> responseParts = (List<Map<String, Object>>) content.get("parts");
+                            if (responseParts != null && !responseParts.isEmpty()) {
+                                return (String) responseParts.get(0).get("text");
+                            }
+                        }
+                    } catch (Exception e) {
+                        return "Error parsing Gemini response: " + e.getMessage();
+                    }
+                    
+                    return "No response from Gemini API";
+                });
+
+                return response;
+            }
+        } catch (Exception e) {
+            return "Error calling Gemini API: " + e.getMessage();
+        }
     }
 }

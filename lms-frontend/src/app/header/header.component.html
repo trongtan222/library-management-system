@@ -189,21 +189,31 @@
             <i class="fa-solid fa-user-circle"></i> Tài Khoản Của Tôi
           </a>
         </li>
+        <li class="nav-item" *ngIf="isUser()">
+          <a
+            class="nav-link"
+            routerLink="/gamification"
+            routerLinkActive="active"
+          >
+            <i class="fa-solid fa-trophy text-warning"></i> Điểm Thưởng
+          </a>
+        </li>
       </ul>
 
       <div class="d-flex align-items-center gap-2">
         <button
-          class="btn btn-outline-light btn-sm"
+          class="theme-toggle"
           (click)="toggleTheme()"
-          title="Toggle Dark/Light Mode"
-          aria-label="Toggle theme"
+          [class.is-dark]="currentTheme === 'dark'"
+          aria-label="Chuyển chế độ sáng/tối"
         >
-          <i
-            *ngIf="currentTheme === 'dark'"
-            class="fa-solid fa-sun"
-            style="color: #ffc107"
-          ></i>
-          <i *ngIf="currentTheme === 'light'" class="fa-solid fa-moon"></i>
+          <span class="icon sun" aria-hidden="true"
+            ><i class="fa-solid fa-sun"></i
+          ></span>
+          <span class="icon moon" aria-hidden="true"
+            ><i class="fa-solid fa-moon"></i
+          ></span>
+          <span class="toggle-handle"></span>
         </button>
 
         <ng-container *ngIf="!isLoggedIn()">

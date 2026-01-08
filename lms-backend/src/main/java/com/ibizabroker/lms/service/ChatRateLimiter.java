@@ -45,6 +45,7 @@ public class ChatRateLimiter {
         return redis != null;
     }
 
+    @SuppressWarnings("null")
     private boolean allowRedis(String key) {
         try {
             String redisKey = "rl:" + key;
